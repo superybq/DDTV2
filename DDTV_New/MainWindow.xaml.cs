@@ -417,7 +417,7 @@ namespace DDTV_New
 
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
-            //获取响应内容  
+            //获取响应内容
             using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
             {
                 result = reader.ReadToEnd();
@@ -934,9 +934,9 @@ namespace DDTV_New
         public void 打开直播列表(Downloader DL)
         {
             //System.Diagnostics.Process p = new System.Diagnostics.Process();
-            //p.StartInfo.FileName = @"D:\Program Files (x86)\Pure Codec\x64\PotPlayerMini64.exe";//需要启动的程序名       
-            //p.StartInfo.Arguments = " \""+DL.DownIofo.下载地址+"\"";//启动参数       
-            //p.Start();//启动       
+            //p.StartInfo.FileName = @"D:\Program Files (x86)\Pure Codec\x64\PotPlayerMini64.exe";//需要启动的程序名
+            //p.StartInfo.Arguments = " \""+DL.DownIofo.下载地址+"\"";//启动参数
+            //p.Start();//启动
 
             //return;
 
@@ -1109,7 +1109,7 @@ namespace DDTV_New
             修改列表设置(false);
         }
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="a">T修改录制设置，F修改提醒设置</param>
         public void 修改列表设置(bool a)

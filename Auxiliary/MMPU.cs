@@ -28,7 +28,7 @@ namespace Auxiliary
         public static int 直播更新时间 = 40;
         public static string 下载储存目录 = "";
         public static string 版本号 = "2.0.2.3b";
-        public static string[] 不检测的版本号 = {};
+        public static string[] 不检测的版本号 = { };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -58,7 +58,7 @@ namespace Auxiliary
         public static bool 初始化后启动下载提示 = true;
         public static bool 是否提示一键导入 = true;
         public static bool 剪贴板监听 = false;
- 
+
 
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
 
@@ -196,13 +196,13 @@ namespace Auxiliary
                 {
                     bilibili.BiliUser.登陆();
                     InfoLog.InfoPrintf("\r\nB站账号登陆信息过期或无效,启动失败，请自行打开目录中的[BiliQR.png]或访问[http://本机IP:11419/login]使用B站客户端扫描二维码登陆", InfoLog.InfoClass.下载必要提示);
-                  
+
                     while (string.IsNullOrEmpty(MMPU.Cookie))
                     {
-                       // break;
-                    }              
+                        // break;
+                    }
                 }
-               
+
             }
             MMPU.csrf = MMPU.读ini配置文件("User", "csrf", MMPU.BiliUserFile);
             #endregion
@@ -275,7 +275,7 @@ namespace Auxiliary
             {
                 return bilibili.BiliUser.Read(节点, 项目, null, 路径);
             }
-            else if(MMPU.启动模式==1)
+            else if (MMPU.启动模式 == 1)
             {
                 string text = File.ReadAllText(路径);
                 try
@@ -287,7 +287,7 @@ namespace Auxiliary
                 {
                     return "";
                 }
-                
+
             }
             else
             {
@@ -332,7 +332,7 @@ namespace Auxiliary
             req.Method = "GET";
             req.ContentType = "application/x-www-form-urlencoded";
             req.UserAgent = MMPU.UA.Ver.UA(); ;
-            
+
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
             //获取响应内容  
@@ -416,9 +416,9 @@ namespace Auxiliary
             public static void 更新网络房间缓存()
             {
                 int A = 1;
-                new Task((() => 
+                new Task((() =>
                 {
-                    InfoLog.InfoPrintf("开始更新网络房间缓存",InfoLog.InfoClass.Debug);
+                    InfoLog.InfoPrintf("开始更新网络房间缓存", InfoLog.InfoClass.Debug);
                     try
                     {
                         var wc = new WebClient();
@@ -426,8 +426,8 @@ namespace Auxiliary
                         wc.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
                         wc.Encoding = Encoding.UTF8;
                         string roomHtml = wc.DownloadString("https://vdb.vtbs.moe/json/list.json");//File.ReadAllText("T:/Untitled-1.json");//
-                       // File.WriteAllText("T:/1tt.txt", roomHtml);
-                        //Clipboard.SetDataObject(roomHtml);
+                                                                                                   // File.WriteAllText("T:/1tt.txt", roomHtml);
+                                                                                                   //Clipboard.SetDataObject(roomHtml);
                         var result = JObject.Parse(roomHtml);
                         InfoLog.InfoPrintf("网络房间缓存下载完成，开始预处理", InfoLog.InfoClass.Debug);
                         foreach (var item in result["vtbs"])
@@ -437,13 +437,14 @@ namespace Auxiliary
                                 try
                                 {
                                     string name = item["name"][item["name"]["default"]?.ToString()]?.ToString();
+                                    string cnName = item["name"]["cn"]?.ToString();
                                     if (x["platform"].ToString() == "bilibili")
                                     {
-                                       
+
                                         列表缓存.Add(new 列表加载缓存
                                         {
                                             编号 = A,
-                                            名称 = name,
+                                            名称 = string.IsNullOrEmpty(cnName) ? name : cnName,
                                             官方名称 = name,
                                             平台 = "bilibili",
                                             UID = x["id"].ToString(),
@@ -557,7 +558,7 @@ namespace Auxiliary
             /// <param name="url">目标路径</param>
             /// <param name="P">平台</param>
             /// <returns></returns>
-            public bool 判断(string url, string P,string roomId)
+            public bool 判断(string url, string P, string roomId)
             {
                 try
                 {
@@ -599,7 +600,7 @@ namespace Auxiliary
                 //    return false;
 
                 //}
-                catch (Exception )
+                catch (Exception)
                 {
                     InfoLog.InfoPrintf("判断文件不存在", InfoLog.InfoClass.杂项提示);
                     return false;
@@ -617,7 +618,7 @@ namespace Auxiliary
                     //{
                     //    return true;
                     //}
-                   
+
                 }
             }
 
@@ -642,7 +643,7 @@ namespace Auxiliary
         public static void 文件删除委托(string file)
         {
 
-            new Task((() => 
+            new Task((() =>
             {
                 int i = 0;
                 try
