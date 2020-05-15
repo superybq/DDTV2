@@ -40,6 +40,8 @@ namespace Auxiliary
             public string 原名 { set; get; }
             public string 平台 { set; get; }
             public string youtubeVideoId { set; get; }
+
+            public string Mid { get; set; }
         }
 
         public class RL
@@ -317,6 +319,7 @@ namespace Auxiliary
                         直播状态 = item.LiveStatus,
                         原名 = item.OfficialName,
                         是否提醒 = item.RemindStatus,
+                        Mid = item.Mid,
                         平台="bilibili"
                     });
                     if (首次启动)
@@ -339,7 +342,8 @@ namespace Auxiliary
                         直播状态 = item.LiveStatus,
                         原名 = item.OfficialName,
                         是否提醒 = item.RemindStatus,
-                        平台="youtube"
+                        Mid = item.Mid,
+                        平台 ="youtube"
                     });
                     if (首次启动)
                     {
@@ -369,6 +373,8 @@ namespace Auxiliary
             public bool VideoStatus { get; set; } = false;
             public bool RemindStatus { get; set; } = false;
             public bool LiveStatus { get; set; } = false;
+
+            public string Mid { get; set; }
 
         }
     }

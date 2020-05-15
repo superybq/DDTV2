@@ -412,6 +412,7 @@ namespace Auxiliary
         public class 加载网络房间方法
         {
             public static List<列表加载缓存> 列表缓存 = new List<列表加载缓存>();
+            public static bool CacheOK = false;
             public static void 更新网络房间缓存()
             {
                 int A = 1;
@@ -435,7 +436,7 @@ namespace Auxiliary
                             {
                                 try
                                 {
-                                    string name = item["name"][item["name"]["default"].ToString()].ToString();
+                                    string name = item["name"][item["name"]["default"]?.ToString()]?.ToString();
                                     if (x["platform"].ToString() == "bilibili")
                                     {
                                        
@@ -478,6 +479,7 @@ namespace Auxiliary
                         ;
                     }
                     InfoLog.InfoPrintf("网络房间缓存更新成功", InfoLog.InfoClass.Debug);
+                    CacheOK = true;
                     //this.Dispatcher.Invoke(new Action(delegate
                     //{
                     //    选中内容展示.Content = "";

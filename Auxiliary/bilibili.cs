@@ -40,31 +40,40 @@ namespace Auxiliary
                 }
             });
         }
+
+
         private static void 周期更新B站房间状态()
         {
             int a = 0;
             InfoLog.InfoPrintf("本地房间状态缓存更新开始", InfoLog.InfoClass.Debug);
             foreach (var roomtask in RoomList)
             {
-                RoomInit.RoomInfo A = GetRoomInfo(roomtask.房间号);
+                //RoomInit.RoomInfo A = GetRoomInfo(roomtask.房间号);
+                VtbStatus.VtbStatusInfo A = VtbStatus.GetVtbStatus(roomtask.Mid);
                 if (A != null)
                 {
-                    for (int i = 0; i < RoomList.Count(); i++)
-                    {
-                        if (RoomList[i].房间号 == A.房间号)
-                        {
-                            RoomList[i].平台 = A.平台;
-                            RoomList[i].标题 = A.标题;
-                            RoomList[i].UID = A.UID;
-                            RoomList[i].直播开始时间 = A.直播开始时间;
-                            RoomList[i].直播状态 = A.直播状态;
-                            if (A.直播状态)
-                                a++;
-                            break;
-                        }
-                    }
+                    roomtask.平台 = "bilibili";
+                    //roomtask.UID = A.mid.ToString();
+                    roomtask.标题 = A.liveStatus == 1 ? A.title : "";
+                    roomtask.直播开始时间 = A.time;
+                    roomtask.直播状态 = A.liveStatus == 1 ? true : false;
+                    if (roomtask.直播状态) a++;
+                    //for (int i = 0; i < RoomList.Count(); i++)
+                    //{
+                    //    if (RoomList[i].房间号 == A.房间号)
+                    //    {
+                    //        RoomList[i].平台 = A.平台;
+                    //        RoomList[i].标题 = A.标题;
+                    //        RoomList[i].UID = A.UID;
+                    //        RoomList[i].直播开始时间 = A.直播开始时间;
+                    //        RoomList[i].直播状态 = A.直播状态;
+                    //        if (A.直播状态)
+                    //            a++;
+                    //        break;
+                    //    }
+                    //}
                 }
-                Thread.Sleep(150);
+                //Thread.Sleep(150);
             }
             InfoLog.InfoPrintf("本地房间状态更新结束", InfoLog.InfoClass.Debug);
         }
@@ -165,7 +174,7 @@ namespace Auxiliary
                     }
                     catch (Exception)
                     {
-                       
+
                     }
                 }
 
@@ -491,7 +500,7 @@ namespace Auxiliary
                     直播状态 = result["data"]["live_status"].ToString() == "1" ? true : false,
                     UID = result["data"]["uid"].ToString(),
                     直播开始时间 = result["data"]["live_time"].ToString(),
-                    平台="bilibili"
+                    平台 = "bilibili"
                 };
                 InfoLog.InfoPrintf("获取到房间信息:" + roominfo.UID + " " + (roominfo.直播状态 ? "已开播" : "未开播") + " " + (roominfo.直播状态 ? "开播时间:" + roominfo.直播开始时间 : ""), InfoLog.InfoClass.Debug);
                 return roominfo;
@@ -633,7 +642,7 @@ namespace Auxiliary
 
         public class MainVideo
         {
-         
+
         }
     }
 

@@ -43,13 +43,13 @@ namespace DDTV_New
             .Register(nameof(ViewModel), typeof(MainViewModel), typeof(MainWindow));
         public MainViewModel ViewModel
         {
-            get => (MainViewModel) GetValue(ViewModelProperty);
+            get => (MainViewModel)GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
         }
         object IViewFor.ViewModel
         {
             get => ViewModel;
-            set => ViewModel = (MainViewModel) value;
+            set => ViewModel = (MainViewModel)value;
         }
 
         public MainWindow()
@@ -122,7 +122,7 @@ namespace DDTV_New
 #pragma warning restore CA5359 // Do Not Disable Certificate Validation
             System.Net.ServicePointManager.DefaultConnectionLimit = 999;/*---------这里最重要--------*/
             System.Net.ServicePointManager.MaxServicePoints = 999;
-         
+
         }
 
 
@@ -158,7 +158,7 @@ namespace DDTV_New
             {
                 刷新房间列表UI();
                 runOnLocalThread(() => ViewModel.LatestDataUpdateTime = DateTime.Now);
-                
+
                 while (true)
                 {
                     if (bilibili房间信息更新次数 > 0)
@@ -459,11 +459,11 @@ namespace DDTV_New
                     if (MMPU.版本号 != 服务器版本号 && 检测状态)
                     {
                         MessageBoxResult dr = MessageBox.Show(
-                            "检测到版本更新,更新公告:\n" 
-                                + MMPU.TcpSend(Server.RequestCode.GET_UPDATE_ANNOUNCEMENT, "{}", true) 
-                                + "\n\n点击确定跳转到补丁下载网页，点击取消忽略", 
-                            "有新版本", 
-                            MessageBoxButton.OKCancel, 
+                            "检测到版本更新,更新公告:\n"
+                                + MMPU.TcpSend(Server.RequestCode.GET_UPDATE_ANNOUNCEMENT, "{}", true)
+                                + "\n\n点击确定跳转到补丁下载网页，点击取消忽略",
+                            "有新版本",
+                            MessageBoxButton.OKCancel,
                             MessageBoxImage.Question);
 
                         if (dr == MessageBoxResult.OK)
@@ -521,6 +521,7 @@ namespace DDTV_New
                 检测房间状态变化用的字符串 += item.是否录制视频;
                 检测房间状态变化用的字符串 += item.房间号;
                 检测房间状态变化用的字符串 += item.原名;
+                检测房间状态变化用的字符串 += item.标题;
             }
             foreach (var item in 未直播)
             {
@@ -532,6 +533,7 @@ namespace DDTV_New
                 检测房间状态变化用的字符串 += item.是否录制视频;
                 检测房间状态变化用的字符串 += item.房间号;
                 检测房间状态变化用的字符串 += item.原名;
+                检测房间状态变化用的字符串 += item.标题;
             }
             if (MMPU.房间状态MD5值 != MMPU.GetMD5(检测房间状态变化用的字符串))
             {
@@ -544,7 +546,7 @@ namespace DDTV_New
                 {
                     this.Dispatcher.Invoke(new Action(delegate
                     {
-                        LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名);
+                        LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名, item.标题);
                     }));
                     i++;
 
@@ -553,7 +555,7 @@ namespace DDTV_New
                 {
                     this.Dispatcher.Invoke(new Action(delegate
                     {
-                        LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名);
+                        LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名, item.标题);
                     }));
                     i++;
                 }
@@ -584,9 +586,9 @@ namespace DDTV_New
             }
         }
 
-        public void LiveListAdd(int 编号, string 名称, bool 状态, string 平台, bool 直播提醒, bool 是否录制, string 唯一码, string 原名)
+        public void LiveListAdd(int 编号, string 名称, bool 状态, string 平台, bool 直播提醒, bool 是否录制, string 唯一码, string 原名, string 标题)
         {
-            LiveList.Items.Add(new { 编号 = 编号, 名称 = 名称, 状态 = 状态 ? "●直播中" : "○未直播", 平台 = 平台, 是否提醒 = 直播提醒 ? "√" : "", 是否录制 = 是否录制 ? "√" : "", 唯一码 = 唯一码, 原名 = 原名 });
+            LiveList.Items.Add(new { 编号 = 编号, 名称 = 名称, 状态 = 状态 ? "●直播中" : "○未直播", 平台 = 平台, 是否提醒 = 直播提醒 ? "√" : "", 是否录制 = 是否录制 ? "√" : "", 唯一码 = 唯一码, 原名 = 原名, 标题 = 标题 });
         }
 
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1636,7 +1638,7 @@ namespace DDTV_New
                 MessageBox.Show("请先登录");
                 return;
             }
-            else if (MMPU.加载网络房间方法.列表缓存.Count < 1000)
+            else if (!MMPU.加载网络房间方法.CacheOK)
             {
                 MessageBox.Show("=======================\n房间列表数据后台加载中，请30秒后再试\n=======================");
                 return;
@@ -1703,7 +1705,7 @@ namespace DDTV_New
                         if (!是否已经存在 && !string.IsNullOrEmpty(房间号.Trim('0')))
                         {
                             增加的数量++;
-                            RB.data.Add(new RoomCadr { Name = 符合条件的.名称, RoomNumber = 符合条件的.房间号, Types = 符合条件的.平台, RemindStatus = false, status = false, VideoStatus = false, OfficialName = 符合条件的.官方名称, LiveStatus = false });
+                            RB.data.Add(new RoomCadr { Name = 符合条件的.名称, RoomNumber = 符合条件的.房间号, Types = 符合条件的.平台, RemindStatus = false, status = false, VideoStatus = false, OfficialName = 符合条件的.官方名称, LiveStatus = false, Mid = 符合条件的.UID });
                         }
                     }
 
