@@ -17,6 +17,7 @@ using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
+using static Auxiliary.bilibili;
 
 namespace Auxiliary
 {
@@ -25,10 +26,10 @@ namespace Auxiliary
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
         public static string 直播缓存目录 = "";
-        public static int 直播更新时间 = 40;
+        public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.2.3b";
-        public static string[] 不检测的版本号 = { };
+        public static string 版本号 = "2.0.2.4a";
+        public static string[] 不检测的版本号 = {};
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -58,6 +59,9 @@ namespace Auxiliary
         public static bool 初始化后启动下载提示 = true;
         public static bool 是否提示一键导入 = true;
         public static bool 剪贴板监听 = false;
+        public static bool DDC采集使能 = true;
+        public static int DDC采集间隔 = 1000;
+        public static int 数据源 = 0;//0：vdb   1：B API
 
 
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
@@ -74,7 +78,7 @@ namespace Auxiliary
                 {
                     Debug = false,
                     下载必要提示 = true,
-                    杂项提示 = false,
+                    杂项提示 = true,
                     系统错误信息 = true,
                     输出到文件 = false
                 });
@@ -207,7 +211,9 @@ namespace Auxiliary
             MMPU.csrf = MMPU.读ini配置文件("User", "csrf", MMPU.BiliUserFile);
             #endregion
             InfoLog.InfoPrintf("Bilibili账号信息加载完成", InfoLog.InfoClass.Debug);
-            //初始化房间
+            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+           
+            DDcenter.DdcClient.Connect();
             RoomInit.start();
             return true;
         }
@@ -412,75 +418,85 @@ namespace Auxiliary
         public class 加载网络房间方法
         {
             public static List<列表加载缓存> 列表缓存 = new List<列表加载缓存>();
-            public static bool CacheOK = false;
+            public static bool 是否正在缓存 = false;
             public static void 更新网络房间缓存()
             {
                 int A = 1;
                 new Task((() =>
                 {
-                    InfoLog.InfoPrintf("开始更新网络房间缓存", InfoLog.InfoClass.Debug);
-                    try
+                    是否正在缓存 = true;
+                 //  while(true)
                     {
-                        var wc = new WebClient();
-                        wc.Headers.Add("Accept: */*");
-                        wc.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
-                        wc.Encoding = Encoding.UTF8;
-                        string roomHtml = wc.DownloadString("https://vdb.vtbs.moe/json/list.json");//File.ReadAllText("T:/Untitled-1.json");//
-                                                                                                   // File.WriteAllText("T:/1tt.txt", roomHtml);
-                                                                                                   //Clipboard.SetDataObject(roomHtml);
-                        var result = JObject.Parse(roomHtml);
-                        InfoLog.InfoPrintf("网络房间缓存下载完成，开始预处理", InfoLog.InfoClass.Debug);
-                        foreach (var item in result["vtbs"])
+                        try
                         {
-                            foreach (var x in item["accounts"])
+                            InfoLog.InfoPrintf("开始更新网络房间缓存", InfoLog.InfoClass.Debug);
+                            try
                             {
-                                try
+                                var wc = new WebClient();
+                                wc.Headers.Add("Accept: */*");
+                                wc.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
+                                wc.Encoding = Encoding.UTF8;
+                                string roomHtml = wc.DownloadString("https://vdb.vtbs.moe/json/list.json");//File.ReadAllText("T:/Untitled-1.json");//;
+                                var result = JObject.Parse(roomHtml);
+                                InfoLog.InfoPrintf("网络房间缓存下载完成，开始预处理", InfoLog.InfoClass.Debug);
+                                foreach (var item in result["vtbs"])
                                 {
-                                    string name = item["name"][item["name"]["default"]?.ToString()]?.ToString();
-                                    string cnName = item["name"]["cn"]?.ToString();
-                                    if (x["platform"].ToString() == "bilibili")
+                                    foreach (var x in item["accounts"])
                                     {
-
-                                        列表缓存.Add(new 列表加载缓存
+                                        try
                                         {
-                                            编号 = A,
-                                            名称 = string.IsNullOrEmpty(cnName) ? name : cnName,
-                                            官方名称 = name,
-                                            平台 = "bilibili",
-                                            UID = x["id"].ToString(),
-                                            类型 = x["type"].ToString()
-                                        });
-                                        A++;
+                                            string name = item["name"][item["name"]["default"].ToString()].ToString();
+                                            if (x["platform"].ToString() == "bilibili")
+                                            {
+
+                                                列表缓存.Add(new 列表加载缓存
+                                                {
+                                                    编号 = A,
+                                                    名称 = name,
+                                                    官方名称 = name,
+                                                    平台 = "bilibili",
+                                                    UID = x["id"].ToString(),
+                                                    类型 = x["type"].ToString()
+                                                });
+                                                A++;
+                                            }
+                                            //else if (x["platform"].ToString() == "youtube")
+                                            //{
+
+                                            //    列表缓存.Add(new 列表加载缓存
+                                            //    {
+                                            //        编号 = A,
+                                            //        名称 = name,
+                                            //        官方名称 = name,
+                                            //        平台 = "youtube",
+                                            //        UID = x["id"].ToString(),
+                                            //        类型 = x["type"].ToString()
+                                            //    });
+                                            //    A++;
+                                            //}
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            是否正在缓存 = false;
+                                            //throw;
+                                        }
                                     }
-                                    //else if (x["platform"].ToString() == "youtube")
-                                    //{
-
-                                    //    列表缓存.Add(new 列表加载缓存
-                                    //    {
-                                    //        编号 = A,
-                                    //        名称 = name,
-                                    //        官方名称 = name,
-                                    //        平台 = "youtube",
-                                    //        UID = x["id"].ToString(),
-                                    //        类型 = x["type"].ToString()
-                                    //    });
-                                    //    A++;
-                                    //}
-                                }
-                                catch (Exception e)
-                                {
-
-                                    //throw;
                                 }
                             }
+                            catch (Exception e)
+                            {
+                                是否正在缓存 = false;
+                            }
+                            是否正在缓存 = false;
+                            InfoLog.InfoPrintf("网络房间缓存更新成功", InfoLog.InfoClass.Debug);
                         }
+                        catch (Exception)
+                        {
+
+                            是否正在缓存 = false;
+                        }
+                       // Thread.Sleep(300000);
                     }
-                    catch (Exception e)
-                    {
-                        ;
-                    }
-                    InfoLog.InfoPrintf("网络房间缓存更新成功", InfoLog.InfoClass.Debug);
-                    CacheOK = true;
                     //this.Dispatcher.Invoke(new Action(delegate
                     //{
                     //    选中内容展示.Content = "";
