@@ -1679,11 +1679,11 @@ namespace DDTV_New
                 MessageBox.Show("请先登录");
                 return;
             }
-            else if (!MMPU.加载网络房间方法.CacheOK)
+            else if (MMPU.加载网络房间方法.列表缓存.Count < 1000)
             {
-                if(!MMPU.加载网络房间方法.是否正在缓存)
+                if (!MMPU.加载网络房间方法.是否正在缓存)
                 {
-                    new Task(()=> {
+                    new Task(() => {
                         MMPU.加载网络房间方法.更新网络房间缓存();
                     }).Start();
                 }
@@ -1751,7 +1751,7 @@ namespace DDTV_New
                         if (!是否已经存在 && !string.IsNullOrEmpty(房间号.Trim('0')))
                         {
                             增加的数量++;
-                            RB.data.Add(new RoomCadr { Name = 符合条件的.名称, RoomNumber = 符合条件的.房间号, Types = 符合条件的.平台, RemindStatus = false, status = false, VideoStatus = false, OfficialName = 符合条件的.官方名称, LiveStatus = false, Mid = 符合条件的.UID });
+                            RB.data.Add(new RoomCadr { Name = 符合条件的.名称, RoomNumber = 符合条件的.房间号, Types = 符合条件的.平台, RemindStatus = false, status = false, VideoStatus = false, OfficialName = 符合条件的.官方名称, LiveStatus = false });
                         }
                     }
                     Thread.Sleep(150);

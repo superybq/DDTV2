@@ -50,7 +50,7 @@ namespace Auxiliary
         {
             int a = 0;
             InfoLog.InfoPrintf("本地房间状态缓存更新开始", InfoLog.InfoClass.Debug);
-           
+
 
             switch (MMPU.数据源)
             {
@@ -59,33 +59,28 @@ namespace Auxiliary
                         JArray JO = (JArray)JsonConvert.DeserializeObject(MMPU.返回网页内容_GET("https://api.vtbs.moe/v1/living"));
                         foreach (var roomtask in RoomList)
                         {
-                            roomtask.直播状态 = false;
-                            if (JO.ToString().Contains(roomtask.房间号))
+                            roomtask.直播状态 = JO.ToString().Contains(roomtask.房间号);
+                            if (roomtask.直播状态)
                             {
-                                roomtask.直播状态 = true;
+                                JObject job = (JObject)JsonConvert.DeserializeObject(MMPU.返回网页内容_GET($"https://api.vtbs.moe/v1/room/{roomtask.房间号}"));
+                                roomtask.标题 = job["title"]?.ToString();
                             }
-                            else
-                            {
-                                roomtask.直播状态 = false;
-                            }
-                        break;
                         }
+                        break;
                     }
                 case 1:
                     {
                         foreach (var roomtask in RoomList)
                         {
-                //RoomInit.RoomInfo A = GetRoomInfo(roomtask.房间号);
-                VtbStatus.VtbStatusInfo A = VtbStatus.GetVtbStatus(roomtask.Mid);
-                if (A != null)
-                {
-                    roomtask.平台 = "bilibili";
-                    //roomtask.UID = A.mid.ToString();
-                    roomtask.标题 = A.liveStatus == 1 ? A.title : "";
-                    roomtask.直播开始时间 = A.time;
-                    roomtask.直播状态 = A.liveStatus == 1 ? true : false;
-                    if (roomtask.直播状态) a++;
-                }
+                            JObject job = (JObject)JsonConvert.DeserializeObject(MMPU.返回网页内容_GET($"https://api.vtbs.moe/v1/room/{roomtask.房间号}"));
+                            if (job != null)
+                            {
+                                roomtask.平台 = "bilibili";
+                                roomtask.标题 = job["title"].ToString();
+                                roomtask.直播开始时间 = job["live_time"].ToString();
+                                roomtask.直播状态 = Convert.ToInt64(job["live_time"]) > 0 ? true : false;
+                                if (roomtask.直播状态) a++;
+                            }
                         }
                         break;
                     }
@@ -211,7 +206,7 @@ namespace Auxiliary
         public static string 通过UID获取房间号(string uid)
         {
             //键值:byUIDgetROOMID+UID
-            if(DataCache.通过UID获取房间号键值对.TryGetValue("byUIDgetROOMID"+ uid, out string CacheData))
+            if (DataCache.通过UID获取房间号键值对.TryGetValue("byUIDgetROOMID" + uid, out string CacheData))
             {
                 InfoLog.InfoPrintf("缓存命中,从缓存根据UID获取到房间号:" + CacheData, InfoLog.InfoClass.Debug);
                 return CacheData;
@@ -295,11 +290,11 @@ namespace Auxiliary
                 {
                     DataCache.获取标题有效期.TryGetValue("byROOMIDgetTITLE" + roomid, out DateTime DT);
                     TimeSpan TS = DateTime.Now - DT;
-                    if (TS.TotalSeconds< 3600.0)
+                    if (TS.TotalSeconds < 3600.0)
                     {
                         InfoLog.InfoPrintf("缓存命中,从缓存获取标题键值对:" + CacheData, InfoLog.InfoClass.Debug);
                         return CacheData;
-                    } 
+                    }
                 }
                 roomid = 获取真实房间号(roomid);
                 if (roomid == null)
@@ -570,12 +565,12 @@ namespace Auxiliary
             {
                 ByQRCode.QrCodeStatus_Changed += ByQRCode_QrCodeStatus_Changed;
                 ByQRCode.QrCodeRefresh += ByQRCode_QrCodeRefresh;
-                ByQRCode.LoginByQrCode("#FF000000","#FFFFFFFF",true).Save("./BiliQR.png", System.Drawing.Imaging.ImageFormat.Png);
+                ByQRCode.LoginByQrCode("#FF000000", "#FFFFFFFF", true).Save("./BiliQR.png", System.Drawing.Imaging.ImageFormat.Png);
             }
             private static void ByQRCode_QrCodeRefresh(Bitmap newQrCode)
             {
                 newQrCode.Save("./BiliQR.png", System.Drawing.Imaging.ImageFormat.Png);
-            } 
+            }
 
             public static void ByQRCode_QrCodeStatus_Changed(ByQRCode.QrCodeStatus status, Account account = null)
             {
@@ -688,7 +683,7 @@ namespace Auxiliary
             [DllImport("kernel32")]
             public static extern int WritePrivateProfileString(string lpApplicationName, string lpKeyName, string lpString, string lpFileName);
         }
-        public class BiliWebSocket: RoomInit.RoomInfo
+        public class BiliWebSocket : RoomInit.RoomInfo
         {
             public int room_id;
             public async void WebSocket(int roomId)
@@ -705,7 +700,7 @@ namespace Auxiliary
                 switch (e)
                 {
                     case DanmuMessageEventArgs danmu:
-                       // Console.WriteLine("WebSocket收到弹幕数据:{0}:{1}", danmu.UserName, danmu.Message);
+                        // Console.WriteLine("WebSocket收到弹幕数据:{0}:{1}", danmu.UserName, danmu.Message);
                         //Debug.Log("M:" + danmu.Message);
                         //mtext.text = "M:" + danmu.Message;
                         break;
@@ -726,7 +721,7 @@ namespace Auxiliary
                     default:
                         // Debug.LogError("???" + e.JsonObject);
                         // Debug.LogError(LitJson.JsonMapper.ToJson(e.JsonObject));
-                        
+
                         break;
                 }
             }

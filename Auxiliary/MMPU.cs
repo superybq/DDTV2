@@ -445,14 +445,15 @@ namespace Auxiliary
                                     {
                                         try
                                         {
-                                            string name = item["name"][item["name"]["default"].ToString()].ToString();
+                                            string name = item["name"][item["name"]["default"]?.ToString()]?.ToString();
+                                            string cnName = item["name"]["cn"]?.ToString();
                                             if (x["platform"].ToString() == "bilibili")
                                             {
 
                                                 列表缓存.Add(new 列表加载缓存
                                                 {
                                                     编号 = A,
-                                                    名称 = name,
+                                                    名称 = string.IsNullOrEmpty(cnName) ? name : cnName,
                                                     官方名称 = name,
                                                     平台 = "bilibili",
                                                     UID = x["id"].ToString(),
