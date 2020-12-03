@@ -49,12 +49,16 @@ namespace DDTVLiveRecWebServer
                 });
                 endpoints.MapGet("/file", async context =>
                 {
+                    if(!Directory.Exists(Auxiliary.MMPU.缓存路径))
+                    {
+                        Directory.CreateDirectory(Auxiliary.MMPU.缓存路径);
+                    }
                     string A = "当前录制文件夹文件列表:\r\n";
                     context.Response.ContentType = "text/plain; charset=utf-8";
-                    foreach (DirectoryInfo NextFolder1 in new DirectoryInfo("./tmp").GetDirectories())
+                    foreach (DirectoryInfo NextFolder1 in new DirectoryInfo(Auxiliary.MMPU.缓存路径).GetDirectories())
                     {
                         A = A + "\r\n" + NextFolder1.Name;
-                        foreach (FileInfo NextFolder2 in new DirectoryInfo("./tmp/" + NextFolder1.Name).GetFiles())
+                        foreach (FileInfo NextFolder2 in new DirectoryInfo(Auxiliary.MMPU.缓存路径 + NextFolder1.Name).GetFiles())
                         {
                             A = A + "\r\n　　" + Math.Ceiling(NextFolder2.Length / 1024.0 / 1024.0) + " MB |" + NextFolder2.Name;
                         }
@@ -65,7 +69,7 @@ namespace DDTVLiveRecWebServer
                 endpoints.MapGet("/list", async context =>
                 {
                     context.Response.ContentType = "text/html; charset=utf-8";
-                    await context.Response.WriteAsync(Auxiliary.InfoLog.DownloaderInfoPrintf(), System.Text.Encoding.UTF8);
+                    await context.Response.WriteAsync(Auxiliary.InfoLog.DownloaderInfoPrintf(0), System.Text.Encoding.UTF8);
                 });
                 endpoints.MapGet("/login", async context =>
                 {
@@ -78,6 +82,47 @@ namespace DDTVLiveRecWebServer
                     {
                         await context.Response.WriteAsync("<a>二维码加载失败，请稍等3秒后刷新网页,如多次失败，请查看控制台是否输出错误信息<a/>", System.Text.Encoding.UTF8);
                     }
+                });
+                endpoints.MapGet("/systeminfo", async context =>
+                {
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync(Auxiliary.InfoLog.GetSystemInfo());
+                });
+                endpoints.MapGet("/config", async context =>
+                {
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync("访问以下链接以修改配置:<br/>(修改后请重启DDTVLiveRec生效)<br/>" +
+                        "<br/>打开弹幕/礼物/舰队录制储存IP:11419/config-DanmuRecOn" +
+                        "<br/>关闭弹幕/礼物/舰队录制储存IP:11419/config-DanmuRecOff" +
+                        "<br/>打开DEBUG模式 IP:11419/config-DebugOn" +
+                        "<br/>关闭DEBUG模式 IP:11419/config-DebugOff");
+                });
+                endpoints.MapGet("/config-DanmuRecOn", async context =>
+                {
+                    Auxiliary.MMPU.录制弹幕 = true;
+                    Auxiliary.MMPU.setFiles("RecordDanmu", "1");
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync("打开弹幕/礼物/舰队录制储存成功");
+                });
+                endpoints.MapGet("/config-DanmuRecOff", async context =>
+                {
+                    Auxiliary.MMPU.录制弹幕 = false;
+                    Auxiliary.MMPU.setFiles("RecordDanmu", "0");
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync("关闭弹幕/礼物/舰队录制储存成功");
+                });
+                endpoints.MapGet("/config-DebugOn", async context =>
+                {
+                    Auxiliary.InfoLog.ClasslBool.Debug = true;
+                    Auxiliary.InfoLog.ClasslBool.输出到文件 = true;
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync("Debug模式启动，该模式下会在log文件和终端输出大量log信息，请注意文件体积，重启默认关闭debug模式");
+                });
+                endpoints.MapGet("/config-DebugOff", async context =>
+                {
+                    Auxiliary.InfoLog.ClasslBool.Debug = false;
+                    context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync("Debug模式已关闭");
                 });
             });
         }

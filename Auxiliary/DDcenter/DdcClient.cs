@@ -19,11 +19,12 @@ namespace Auxiliary.DDcenter
             {
                 try
                 {
-                    MMPU.DDC采集间隔 = int.Parse(MMPU.TcpSend(30001, "{}", true));
+                    MMPU.DDC采集间隔 = int.Parse(MMPU.TcpSend(30001, "{}", true,50));
                 }
                 catch (Exception)
                 {
-                    MMPU.DDC采集间隔 = 1000;
+                    //如果服务器无响应或者返回内容错误，保守使用延迟
+                    MMPU.DDC采集间隔 = 60000;
                 }
                 DDC DDC = new DDC();
                 DDC.WebSocket();
@@ -44,17 +45,23 @@ namespace Auxiliary.DDcenter
                     InfoLog.InfoPrintf("环境不满足启动DDC采集，取消DDC上传任务", InfoLog.InfoClass.Debug);
                     return;
                 }
-                while (true)
+                while (MMPU.DDC采集使能)
                 {
                     try
                     {
-                        InfoLog.InfoPrintf("DDC采集开始", InfoLog.InfoClass.Debug);
+                        InfoLog.InfoPrintf("vtbs监听启动", InfoLog.InfoClass.Debug);
 
-                        await _webSocket.ConnectAsync(new Uri("wss://cluster.vtbs.moe/?uuid=DDTVvtbs&runtime=DDTV" + MMPU.版本号 + "&version=" + MMPU.版本号 + "&platform=" + (MMPU.启动模式 == 0 ? "win64" : "linux") + "&name=" + (MMPU.启动模式 == 0 ? "DDTV|" + Encryption.机器码.获取机器码("1145141919810") : "DDTVLiveRec")), _cancellation);
+                        await _webSocket.ConnectAsync(new Uri(
+                            "wss://cluster.vtbs.moe/?uuid=DDTVvtbs" +
+                            "&runtime=DDTV" + MMPU.版本号 + 
+                            "&version=" + MMPU.版本号 + 
+                            "&platform=" + (MMPU.启动模式 == 0 ? "win64" : "linux") + 
+                            "&name=" + (MMPU.启动模式 == 0 ? "DDTV|" + Encryption.机器码.获取机器码("1145141919810") : "DDTVLiveRec")), _cancellation);
 
 
                         while (MMPU.DDC采集使能)
-                        {
+                            
+                            {
                             await _webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes("DDDhttp")), WebSocketMessageType.Text, true, _cancellation);
                             var result = new byte[1024];
                             await _webSocket.ReceiveAsync(new ArraySegment<byte>(result), new CancellationToken());
@@ -94,7 +101,7 @@ namespace Auxiliary.DDcenter
                         }
                         InfoLog.InfoPrintf("DDC采集失败:" + ex.ToString(), InfoLog.InfoClass.Debug);
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
             }
 
@@ -105,9 +112,15 @@ namespace Auxiliary.DDcenter
                 {
                     var wc = new WebClient();
                     wc.Headers.Add("Accept: */*");
-                    wc.Headers.Add("User-Agent: AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+                    wc.Headers.Add("User-Agent: " + MMPU.UA.Ver.UA());
                     wc.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
-
+                    if (url.Contains("bilibili"))
+                    {
+                        if (!string.IsNullOrEmpty(MMPU.Cookie))
+                        {
+                            wc.Headers.Add("Cookie", MMPU.Cookie);
+                        }
+                    }
                     //发送HTTP请求
                     byte[] roomHtml = wc.DownloadData(url);
                     JsonTask a = new JsonTask() { key = key, data = Encoding.UTF8.GetString(roomHtml) };

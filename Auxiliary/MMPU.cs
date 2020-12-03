@@ -20,16 +20,18 @@ using System.Windows;
 using static Auxiliary.bilibili;
 
 namespace Auxiliary
-{
+{ 
     public class MMPU
     {
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
+        public static bool 弹幕显示使能=false;
+        public static bool 字幕显示使能 = false;
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.3.3a";
-        public static string[] 不检测的版本号 = {};
+        public static string 版本号 = "2.0.4.5c";
+        public static string[] 不检测的版本号 = { "2.0.4.5b" };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -51,7 +53,7 @@ namespace Auxiliary
         public static DateTime CookieEX = new DateTime();
         public static string UID = "";
         public static string BiliUserFile = "./BiliUser.ini";
-        public static int 播放缓冲时长 = 3;
+        public static int 播放缓冲时长 = 4;
         public static string AESKey = "rzqIzYmDQFqQmWfr";
         public static string AESVal = "itkIBBs5JdCLKqpP";
         public static bool 转码功能使能 = false;
@@ -59,12 +61,20 @@ namespace Auxiliary
         public static bool 初始化后启动下载提示 = true;
         public static bool 是否提示一键导入 = true;
         public static bool 剪贴板监听 = false;
+        public static bool 录制弹幕 = true;
         public static bool DDC采集使能 = true;
-        public static int DDC采集间隔 = 1000;
+        public static bool 开机自启动 = false;
+        public static int DDC采集间隔 = 60000;
         public static int 数据源 = 0;//0：vdb   1：B API
         public static bool 是否第一次使用DDTV = true;
-        public static bool 是否有新版本 = true;
-       
+        public static bool 是否有新版本 = false;
+        public static string webServer默认监听IP = "0.0.0.0";
+        public static string 缓存路径 = "./tmp/";
+        public static int 弹幕录制种类 = 2;
+        public static int wss连接错误的次数 = 0;
+        public static bool 已经提示wss连接错误 = false;
+        public static bool Debug模式 = false;
+
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
 
         /// <summary>
@@ -74,15 +84,16 @@ namespace Auxiliary
         public static bool 配置文件初始化(int 模式)
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; //加上这一句
+            Debug模式 = MMPU.读取exe默认配置文件("DebugMod", "0") == "0" ? false : true;
             if (模式 == 0)
             {
                 InfoLog.InfoInit("./DDTVLog.out", new InfoLog.InfoClasslBool()
                 {
-                    Debug = true,
+                    Debug = Debug模式,
                     下载必要提示 = true,
-                    杂项提示 = true,
+                    杂项提示 = false,
                     系统错误信息 = true,
-                    输出到文件 = false
+                    输出到文件 = Debug模式
                 });
                 启动模式 = 0;
             }
@@ -90,7 +101,7 @@ namespace Auxiliary
             {
                 InfoLog.InfoInit("./DDTVLiveRecLog.out", new InfoLog.InfoClasslBool()
                 {
-                    Debug = false,
+                    Debug = Debug模式,
                     下载必要提示 = true,
                     杂项提示 = false,
                     系统错误信息 = true,
@@ -109,9 +120,9 @@ namespace Auxiliary
                 //最大直播并行数量
                 MMPU.最大直播并行数量 = int.Parse(MMPU.读取exe默认配置文件("PlayNum", "5"));
                 //默认弹幕颜色
-                MMPU.默认弹幕颜色 = MMPU.读取exe默认配置文件("DanMuColor", "0xFF, 0x00, 0x00, 0x00");
+                MMPU.默认弹幕颜色 = MMPU.读取exe默认配置文件("DanMuColor", "0xFF,0x00,0x00,0x00");
                 //默认字幕颜色
-                MMPU.默认字幕颜色 = MMPU.读取exe默认配置文件("ZiMuColor", "0xFF, 0x00, 0x00, 0x00");
+                MMPU.默认字幕颜色 = MMPU.读取exe默认配置文件("ZiMuColor", "0xFF,0x00,0x00,0x00");
                 //默认字幕大小
                 MMPU.默认字幕大小 = int.Parse(MMPU.读取exe默认配置文件("ZiMuSize", "24"));
                 //默认弹幕大小
@@ -127,16 +138,24 @@ namespace Auxiliary
                 //剪切板监听
                 MMPU.剪贴板监听 = MMPU.读取exe默认配置文件("ClipboardMonitoring", "0") == "0" ? false : true;
                 //数据源
-                MMPU.数据源 = int.Parse(MMPU.读取exe默认配置文件("DataSource", "0"));
+                MMPU.数据源 = int.Parse(MMPU.读取exe默认配置文件("DataSource", "0"));                 
                 //第一次使用DDTV
                 MMPU.是否第一次使用DDTV = MMPU.读取exe默认配置文件("IsFirstTimeUsing", "1") == "0" ? false :true;
+                //第一次使用DDTV
+                MMPU.开机自启动 = MMPU.读取exe默认配置文件("BootUp", "0") == "0" ? false : true;
             }
             else if (模式 == 1)
             {
+                MMPU.webServer默认监听IP = MMPU.读取exe默认配置文件("LiveRecWebServerDefaultIP", "0.0.0.0");                
             }
+            //是否启动WS连接组
+            bilibili.是否启动WS连接组 = MMPU.读取exe默认配置文件("NotVTBStatus", "0") == "0" ? false : true;
+            //转码功能使能
+            MMPU.转码功能使能 = MMPU.读取exe默认配置文件("AutoTranscoding", "0") == "1" ? true : false;
             //检查配置文件
             bilibili.BiliUser.CheckPath(MMPU.BiliUserFile);
-
+            //检查弹幕录制配置
+            MMPU.录制弹幕 = MMPU.读取exe默认配置文件("RecordDanmu", "0") == "1" ? true : false;
             //房间配置文件
             RoomInit.RoomConfigFile = MMPU.读取exe默认配置文件("RoomConfiguration", "./RoomListConfig.json");
             //房间配置文件
@@ -148,8 +167,7 @@ namespace Auxiliary
             //直播更新时间
             MMPU.直播更新时间 = int.Parse(MMPU.读取exe默认配置文件("RoomTime", "40"));
 
-            //转码功能使能
-            MMPU.转码功能使能 = MMPU.读取exe默认配置文件("AutoTranscoding", "0") == "1" ? true : false;
+           
             #endregion
             InfoLog.InfoPrintf("通用配置加载完成", InfoLog.InfoClass.Debug);
 
@@ -161,19 +179,44 @@ namespace Auxiliary
             {
                 DDcenter.DdcClient.Connect();
             }
+            VTBS.API.VTBS服务器CDN.根据CDN更新VTBS_Url();
             RoomInit.start();
+            DokiDoki(模式);
             return true;
+        }
+        public static void DokiDoki(int 模式)
+        {
+            new Thread(new ThreadStart(delegate {
+                while (true)
+                {
+                    try
+                    {
+                        MMPU.TcpSend(模式 == 0 ? Server.RequestCode.SET_DokiDoki_DDTV : Server.RequestCode.SET_DokiDoki_DDTVLiveRec, "{}", true,50);
+                    }
+                    catch (Exception) { }
+                    Thread.Sleep(3600 * 1000);
+                }
+            })).Start();
         }
         public static void BiliUser配置文件初始化(int 模式)
         {
             //账号登陆cookie
             try
             {
-                MMPU.Cookie = string.IsNullOrEmpty(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile)) ? "" : Encryption.UnAesStr(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile), MMPU.AESKey, MMPU.AESVal);
+                MMPU.Cookie = Encryption.UnAesStr(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile), MMPU.AESKey, MMPU.AESVal);
+                if(!MMPU.Cookie.Contains("=")|| !MMPU.Cookie.Contains(";"))
+                {
+                    MMPU.Cookie = "";
+                    MMPU.写ini配置文件("User", "Cookie", "", MMPU.BiliUserFile);
+                    MMPU.csrf = null;
+                    MMPU.写ini配置文件("User", "csrf", "", MMPU.BiliUserFile);
+                }
             }
             catch (Exception)
             {
+                Console.WriteLine("读取cookie缓存错误");
                 MMPU.Cookie = "";
+                MMPU.写ini配置文件("User", "Cookie", "", MMPU.BiliUserFile);
             }
             //账号UID
             MMPU.UID = MMPU.读ini配置文件("User", "UID", MMPU.BiliUserFile); //string.IsNullOrEmpty(MMPU.读取exe默认配置文件("UID", "")) ? null : MMPU.读取exe默认配置文件("UID", "");
@@ -194,10 +237,8 @@ namespace Auxiliary
                             MMPU.csrf = null;
                             MMPU.写ini配置文件("User", "csrf", "", MMPU.BiliUserFile);
                         }
-
                     }
                 }
-
             }
             catch (Exception)
             {
@@ -210,20 +251,39 @@ namespace Auxiliary
             //账号csrf
             if (string.IsNullOrEmpty(MMPU.Cookie))
             {
-                InfoLog.InfoPrintf("\r\n==========================================\r\nbilibili账号cookie为空或已过期，请更新BiliUser.ini信息\r\n==========================================", InfoLog.InfoClass.下载必要提示);
-                InfoLog.InfoPrintf("\r\n==========================================\r\nbilibili账号cookie为空或已过期，请更新BiliUser.ini信息\r\n==========================================", InfoLog.InfoClass.下载必要提示);
-                InfoLog.InfoPrintf("\r\n==========================================\r\nbilibili账号cookie为空或已过期，请更新BiliUser.ini信息\r\n==========================================", InfoLog.InfoClass.下载必要提示);
+                InfoLog.InfoPrintf("\r\n===============================\r\nbilibili账号cookie为空或已过期，请更新BiliUser.ini信息\r\n===============================", InfoLog.InfoClass.下载必要提示);
+                InfoLog.InfoPrintf("\r\n==============\r\nBiliUser.ini文件无效，请使用DDTV本体登陆成功后把DDTV本体里的BiliUser.ini文件覆盖无效的文件\r\n==============", InfoLog.InfoClass.下载必要提示);
                 if (模式 == 1)
                 {
-                    bilibili.BiliUser.登陆();
-                    InfoLog.InfoPrintf("\r\nB站账号登陆信息过期或无效,启动失败，请自行打开目录中的[BiliQR.png]或访问[http://本机IP:11419/login]使用B站客户端扫描二维码登陆", InfoLog.InfoClass.下载必要提示);
-
-                    while (string.IsNullOrEmpty(MMPU.Cookie))
+                    InfoLog.InfoPrintf("\r\n如果短信验证方式验证启动失败，请复制DDTV2本体中有效BiliUser.ini覆盖本地文件后重启DDTVLiveRec\r\n[======如果是非windows系统，请检查文件权限======]", InfoLog.InfoClass.下载必要提示);
+                    try
                     {
-                        // break;
+                        bilibili.BiliUser.登陆();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.ToString());
+                    }
+                    while(string.IsNullOrEmpty(MMPU.Cookie))
+                    {
+                        InfoLog.InfoPrintf("\r\n请根据登陆验证提示操作", InfoLog.InfoClass.系统错误信息);
+                        //InfoLog.InfoPrintf("\r\n阿B登陆验证失败！！！请重启DDTVLiveRec进行登陆验证", InfoLog.InfoClass.下载必要提示);
+                        Thread.Sleep(10000);
                     }
                 }
-
+            }
+            else
+            {
+                if (模式 == 0)
+                {
+                    if (!MMPU.加载网络房间方法.是否正在缓存)
+                    {
+                        new Task(() =>
+                        {
+                            加载网络房间方法.更新网络房间缓存();
+                        }).Start();
+                    }
+                }
             }
             MMPU.csrf = MMPU.读ini配置文件("User", "csrf", MMPU.BiliUserFile);
         }
@@ -267,10 +327,10 @@ namespace Auxiliary
         }
 
         /// <summary>
-        /// 读取配置文件
+        /// 读取配置文件(如果不存在该值，则生成该配置键值对)
         /// </summary>
         /// <param name="name">值名称</param>
-        /// <param name="V">默认值</param>
+        /// <param name="V">如果不存在该值默认填写的默认值</param>
         public static string 读取exe默认配置文件(string name, string V)
         {
             string A1 = V;
@@ -296,7 +356,15 @@ namespace Auxiliary
                 string text = File.ReadAllText(路径);
                 try
                 {
-                    string A1 = text.Replace(项目, "壹").Split('壹')[1].Split('\r')[0].Split('=')[1];
+                    text = text.Replace("\r\n", "\r").Replace("\n","\r");
+
+                    string[] A2 = text.Replace("\n","").Replace(项目, "壹").Split('壹')[1].Split('\r')[0].Split('=');
+                    string A1 = string.Empty;
+                    for (int i =1;i< A2.Length;i++)
+                    {
+                        A1 +=A2[i];
+                    }
+                   
                     return A1;
                 }
                 catch (Exception)
@@ -311,12 +379,38 @@ namespace Auxiliary
             }
         }
 
-        public static string 写ini配置文件(string 节点, string 项目, string 值, string 路径)
+        public static void 写ini配置文件(string 节点, string 项目, string 值, string 路径)
         {
-            bilibili.BiliUser.Write(节点, 项目, 值, 路径);
-            return null;
+            if(MMPU.启动模式==0)
+            {
+                bilibili.BiliUser.Write(节点, 项目, 值, 路径);
+            }
+            else if (MMPU.启动模式 == 1)
+            {
+                string text = File.ReadAllText(路径);
+                if(!text.Contains("[User]"))
+                {
+                    text = "[User]\r\n" + text;
+                }
+                if (text.Contains(项目+"="))
+                {
+                    string B1 = 项目 + "=" + text.Replace(项目 + "=", "⒆").Split('⒆')[1].Replace("\r\n", "⒆").Split('⒆')[0];
+                    string BB = 项目 + "=" + 值;
+                    text = text.Replace(B1, BB);
+                }
+                else
+                {
+                    text = text + "\r\n" + 项目 + "=" + 值;
+                }
+                File.WriteAllText(路径, text);
+            }
+         
         }
-
+        public static IPAddress 根据URL获取IP地址(string URL)
+        {
+            IPAddress[] ipaddress = Dns.GetHostAddresses(URL);
+            return ipaddress[0];
+        }
 
         /// <summary>
         /// 
@@ -329,9 +423,18 @@ namespace Auxiliary
         {
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-            req.Method = "POST";
+            req.Method = "GET";
             req.ContentType = "application/x-www-form-urlencoded";
-
+            req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
+            req.UserAgent = MMPU.UA.Ver.UA();
+            if (url.Contains("bilibili"))
+            {
+                if (!string.IsNullOrEmpty(MMPU.Cookie))
+                {
+                    req.CookieContainer = 转化GET_cookie(MMPU.Cookie);
+                }
+            }
+            // req.Timeout = 5000;
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
             //获取响应内容  
@@ -343,13 +446,19 @@ namespace Auxiliary
         }
         public static string 返回网页内容_GET(string url,int outTime)
         {
-
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "GET";
             req.ContentType = "application/x-www-form-urlencoded";
             req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
             req.UserAgent = MMPU.UA.Ver.UA();
+            //if (url.Contains("bilibili"))
+            //{
+            //    if (!string.IsNullOrEmpty(MMPU.Cookie))
+            //    {
+            //        req.CookieContainer = 转化GET_cookie(MMPU.Cookie);
+            //    }
+            //}
             req.Timeout = outTime;
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
@@ -359,6 +468,24 @@ namespace Auxiliary
                 result = reader.ReadToEnd();
             }
             return result;
+        }
+        public static CookieContainer 转化GET_cookie(string cookie)
+        {
+            CookieContainer CK = new CookieContainer { MaxCookieSize = 4096, PerDomainCapacity = 50 };
+
+            string[] cook = cookie.Replace(" ", "").Split(';');
+            for (int i = 0; i < cook.Length; i++)
+            {
+                try
+                {
+                    CK.Add(new Cookie(cook[i].Split('=')[0], cook[i].Split('=')[1].Replace(",", "%2C")) { Domain = "live.bilibili.com" });
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+            return CK;
         }
         public static string 使用WC获取网络内容(string url)
         {
@@ -374,6 +501,7 @@ namespace Auxiliary
                 }
             }
             byte[] roomHtml = wc.DownloadData(url);
+            wc.Dispose();
             return Encoding.UTF8.GetString(roomHtml);
         }
         public static string 获取网页数据_下载视频用(string url, bool 解码)
@@ -390,6 +518,13 @@ namespace Auxiliary
             rq.Headers.Add("Sec-Fetch-User: ?1");
             rq.Headers.Add("Upgrade-Insecure-Requests: 1");
             rq.Headers.Add("Cache-Control: max-age=0");
+            //if (url.Contains("bilibili"))
+            //{
+            //    if (!string.IsNullOrEmpty(MMPU.Cookie))
+            //    {
+            //        rq.CookieContainer = 转化GET_cookie(MMPU.Cookie);
+            //    }
+            //}
             //rq.Host = "www.bilibili.com";
             rq.UserAgent = MMPU.UA.Ver.UA();
             if (解码)
@@ -429,7 +564,8 @@ namespace Auxiliary
         }
         public class 加载网络房间方法
         {
-            public static List<列表加载缓存> 列表缓存 = new List<列表加载缓存>();
+            public static List<列表加载缓存> 列表缓存1 = new List<列表加载缓存>();
+            public static List<列表加载缓存> 列表缓存2 = new List<列表加载缓存>();
             public static bool 是否正在缓存 = false;
             public static void 更新网络房间缓存()
             {
@@ -448,71 +584,93 @@ namespace Auxiliary
                                 string roomHtml = "";
                                 try
                                 {
-                                    roomHtml = 返回网页内容_GET("https://vdb.vtbs.moe/json/list.json",8000);
+                                    roomHtml = 返回网页内容_GET(VTBS.API.VTBS服务器CDN.VTBS_Url + "/v1/short", 8000);
                                     InfoLog.InfoPrintf("网络房间缓存vtbs加载完成", InfoLog.InfoClass.Debug);
                                 }
-                                catch (Exception e1)
+                                catch (Exception)
                                 {
                                     try
                                     {
                                         InfoLog.InfoPrintf("网络房间缓存vtbs加载失败", InfoLog.InfoClass.Debug);
-                                        roomHtml = 返回网页内容_GET("https://raw.githubusercontent.com/CHKZL/DDTV2/master/Auxiliary/DDcenter/list.json", 12000);
+                                        roomHtml = 返回网页内容_GET("https://raw.githubusercontent.com/CHKZL/DDTV2/master/Auxiliary/DDcenter/vtbsroomlist.json", 12000);
                                         InfoLog.InfoPrintf("网络房间缓存github加载完成", InfoLog.InfoClass.Debug);
                                     }
-                                    catch (Exception e2)
+                                    catch (Exception)
                                     {
                                         InfoLog.InfoPrintf("网络房间缓存github加载失败", InfoLog.InfoClass.Debug);
-                                        roomHtml = File.ReadAllText("AddList.json");
+                                        roomHtml = File.ReadAllText("VtbsList.json");
                                     }
                                 }
-                                var result = JObject.Parse(roomHtml);
+                                JArray result = JArray.Parse(roomHtml);
                                 InfoLog.InfoPrintf("网络房间缓存下载完成，开始预处理", InfoLog.InfoClass.Debug);
-                                foreach (var item in result["vtbs"])
+                                列表缓存2.Clear();
+                                foreach (var item in result)
                                 {
-                                    foreach (var x in item["accounts"])
+                                    if(int.Parse(item["roomid"].ToString())!=0)
                                     {
-                                        try
+                                        列表缓存2.Add(new 列表加载缓存
                                         {
-                                            string name = item["name"][item["name"]["default"]?.ToString()]?.ToString();
-                                            string cnName = item["name"]["cn"]?.ToString();
-                                            if (x["platform"].ToString() == "bilibili")
-                                            {
-
-                                                列表缓存.Add(new 列表加载缓存
-                                                {
-                                                    编号 = A,
-                                                    名称 = string.IsNullOrEmpty(cnName) ? name : cnName,
-                                                    官方名称 = name,
-                                                    平台 = "bilibili",
-                                                    UID = x["id"].ToString(),
-                                                    类型 = x["type"].ToString()
-                                                });
-                                                A++;
-                                            }
-                                            //else if (x["platform"].ToString() == "youtube")
-                                            //{
-
-                                            //    列表缓存.Add(new 列表加载缓存
-                                            //    {
-                                            //        编号 = A,
-                                            //        名称 = name,
-                                            //        官方名称 = name,
-                                            //        平台 = "youtube",
-                                            //        UID = x["id"].ToString(),
-                                            //        类型 = x["type"].ToString()
-                                            //    });
-                                            //    A++;
-                                            //}
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            是否正在缓存 = false;
-                                            //throw;
-                                        }
+                                            编号 = A,
+                                            roomId = item["roomid"].ToString(),
+                                            名称 = item["uname"].ToString(),
+                                            官方名称 = item["uname"].ToString(),
+                                            平台 = "bilibili",
+                                            UID = item["mid"].ToString(),
+                                            类型 = "V"
+                                        }) ;
+                                        A++;
+                                    }
+                                    else
+                                    {
+                                        ;
                                     }
                                 }
+                                列表缓存1 = 列表缓存2;
+                                //foreach (var item in result["vtbs"])
+                                //{
+                                //    foreach (var x in item["accounts"])
+                                //    {
+                                //        try
+                                //        {
+                                //            string name = item["name"][item["name"]["default"].ToString()].ToString();
+                                //            if (x["platform"].ToString() == "bilibili")
+                                //            {
+
+                                //                列表缓存.Add(new 列表加载缓存
+                                //                {
+                                //                    编号 = A,
+                                //                    名称 = name,
+                                //                    官方名称 = name,
+                                //                    平台 = "bilibili",
+                                //                    UID = x["id"].ToString(),
+                                //                    类型 = x["type"].ToString()
+                                //                });
+                                //                A++;
+                                //            }
+                                //            //else if (x["platform"].ToString() == "youtube")
+                                //            //{
+
+                                //            //    列表缓存.Add(new 列表加载缓存
+                                //            //    {
+                                //            //        编号 = A,
+                                //            //        名称 = name,
+                                //            //        官方名称 = name,
+                                //            //        平台 = "youtube",
+                                //            //        UID = x["id"].ToString(),
+                                //            //        类型 = x["type"].ToString()
+                                //            //    });
+                                //            //    A++;
+                                //            //}
+                                //        }
+                                //        catch (Exception)
+                                //        {
+                                //            是否正在缓存 = false;
+                                //            //throw;
+                                //        }
+                                //    }
+                                //}
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                                 是否正在缓存 = false;
                             }
@@ -542,6 +700,7 @@ namespace Auxiliary
                 public string 平台 { set; get; }
                 public string UID { set; get; }
                 public string 类型 { set; get; }
+                public string roomId { set; get; }
             }
 
             public class 选中的网络房间
@@ -566,7 +725,7 @@ namespace Auxiliary
                 spwatch.Stop();
                 return spwatch.Elapsed.TotalMilliseconds;
             }
-            catch (Exception)
+            catch (Exception e)
             {
 
                 return -1;
@@ -765,6 +924,11 @@ namespace Auxiliary
         }
         public static void 储存文本(string data, string CurDir)
         {
+            //如果启动方式为LiveRec则直接退出，不更新配置文件
+            if(MMPU.启动模式==1)
+            {
+                return;
+            }
             //文件覆盖方式添加内容
             System.IO.StreamWriter file = new System.IO.StreamWriter(CurDir, false);
             //保存数据到文件
@@ -881,19 +1045,29 @@ namespace Auxiliary
         //    config.Save(ConfigurationSaveMode.Modified);
 
         //}
-        public static string TcpSend(int code, string msg, bool 是否需要回复)
+
+        /// <summary>
+        /// 和服务器进行TCP通讯
+        /// </summary>
+        /// <param name="code">命令码</param>
+        /// <param name="msg">消息内容</param>
+        /// <param name="是否需要回复"></param>
+        /// <returns></returns>
+        public static string TcpSend(int code, string msg, bool 是否需要回复,int 等待时间)
         {
             try
             {
                 string 回复内容 = "";
                 Socket tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPAddress ipaddress = IPAddress.Parse(Server.IP_ADDRESS);
+                tcpClient.ReceiveBufferSize = 1024 * 1024 * 8;
+                IPAddress ipaddress = Server.IP_ADDRESS;
                 EndPoint point = new IPEndPoint(ipaddress, Server.PORT);
                 tcpClient.Connect(point);//通过IP和端口号来定位一个所要连接的服务器端
                 tcpClient.Send(Encoding.UTF8.GetBytes(JSON发送拼接(code, msg)));
                 if (是否需要回复)
                 {
-                    byte[] buffer = new byte[1024 * 1024];
+                    byte[] buffer = new byte[1024 * 1024 * 8];
+                    Thread.Sleep(等待时间);
                     tcpClient.Receive(buffer);
                     string 收到的数据 = Encoding.UTF8.GetString(buffer).Trim('\0');
                     回复内容 = 收到的数据;
@@ -903,6 +1077,13 @@ namespace Auxiliary
                     回复内容 = null;
                 }
                 tcpClient.Close();
+                try
+                {
+                    tcpClient.Dispose();
+                }
+                catch (Exception)
+                {
+                }
                 return 回复内容;
             }
             catch (Exception)
@@ -945,6 +1126,13 @@ namespace Auxiliary
             req.Method = "POST";
             req.ContentType = "application/x-www-form-urlencoded";
             req.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
+            if (url.Contains("bilibili"))
+            {
+                if (!string.IsNullOrEmpty(MMPU.Cookie))
+                {
+                    req.CookieContainer = 转化GET_cookie(MMPU.Cookie);
+                }
+            }
             #region 添加Post 参数  
             StringBuilder builder = new StringBuilder();
             int i = 0;
@@ -989,8 +1177,6 @@ namespace Auxiliary
             [SuppressMessage("ReSharper", "InconsistentNaming")]
             internal static class Ver
             {
-                public const string VER = "1.5.1";
-                public const string DATE = "(2019-3-1)";
                 public const string DESC = "修改API";
                 public static readonly string OS_VER = "(" + WinVer.SystemVersion.Major + "." + WinVer.SystemVersion.Minor + "." + WinVer.SystemVersion.Build + ")";
                 //ublic static readonly string UA = OS_VER + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36";
@@ -998,15 +1184,15 @@ namespace Auxiliary
                 {
                     if (MMPU.启动模式 == 0)
                     {
-                        return OS_VER + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36";
+                        return OS_VER + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4305.2 Safari/537.36";
                     }
                     else if (MMPU.启动模式 == 1)
                     {
-                        return "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36";
+                        return "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4305.2 Safari/537.36";
                     }
                     else
                     {
-                        return "Mozilla/5.0 AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11";
+                        return "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4305.2 Safari/537.36";
                     }
                 }
             }

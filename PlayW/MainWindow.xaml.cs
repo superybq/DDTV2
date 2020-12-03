@@ -81,7 +81,7 @@ namespace PlayW
                 MMPU.第一次打开播放窗口 = false;
             }
             if (MMPU.系统内核版本 != 10)
-            {
+            {  
                 弹幕使能 = false;
                 弹幕开关.IsChecked = false;
                 弹幕开关.Visibility = Visibility.Collapsed;
@@ -93,6 +93,9 @@ namespace PlayW
                 弹幕输入窗口.Visibility = Visibility.Collapsed;
                 弹幕发送提示.Visibility = Visibility.Collapsed;
                 弹幕高CPU使用率警告.Visibility = Visibility.Collapsed;
+                发送弹幕按钮.Visibility = Visibility.Collapsed;
+                弹幕透明度.Visibility = Visibility.Collapsed;
+                字幕位置.Visibility = Visibility.Collapsed;
                 非win10提示.Visibility = Visibility.Visible;
             }
             else
@@ -111,14 +114,15 @@ namespace PlayW
                 try
                 {
                     Play_STOP();
+                    listener.Close();
+                    listener.Dispose();
                     //this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
                 }
                 catch (Exception)
                 {
                 }
             })).Start();
-            listener.Close();
-            listener.Dispose();
+          
             DD.DownIofo.播放状态 = false;
             窗口是否打开 = false;
         }
@@ -269,9 +273,16 @@ namespace PlayW
             }));
             new Task((() => 
             {
-                listener.ConnectAsync(int.Parse(DD.DownIofo.房间_频道号));
-                listener.MessageReceived += Listener_MessageReceived;
-                MMPU.DownList.Add(DD);
+                try
+                {
+                    listener.Connect(int.Parse(DD.DownIofo.房间_频道号));
+                    listener.MessageReceived += Listener_MessageReceived;
+                }
+                catch (Exception)
+                {
+
+                }
+                //MMPU.DownList.Add(DD);
                 if (DD.DownIofo.是否是播放任务)
                 {
                     DD.Start("缓冲视频中");
@@ -322,47 +333,54 @@ namespace PlayW
         }
         private void Listener_MessageReceived(object sender, MessageEventArgs e)
         {
-            switch (e)
+            try
             {
-                case DanmuMessageEventArgs danmu:
-                    if (字幕使能)
-                    {
-                        if (danmu.Message.Contains("【") || danmu.Message.Contains("】"))
+                switch (e)
+                {
+                    case DanmuMessageEventArgs danmu:
+                        if (字幕使能)
                         {
-                            增加字幕(danmu.Message);
+                            if (danmu.Message.Contains("【") || danmu.Message.Contains("】"))
+                            {
+                                增加字幕(danmu.Message);
+                            }
                         }
-                    }
-                    if (弹幕使能)
-                    {
-                        if (!danmu.Message.Contains("【") || !danmu.Message.Contains("】"))
+                        if (弹幕使能)
                         {
-                            增加弹幕(danmu.Message);
+                            if (!danmu.Message.Contains("【") || !danmu.Message.Contains("】"))
+                            {
+                                增加弹幕(danmu.Message);
+                            }
+
                         }
+                        // Console.WriteLine("WebSocket收到弹幕数据:{0}:{1}", danmu.UserName, danmu.Message);
+                        //Debug.Log("M:" + danmu.Message);
+                        //mtext.text = "M:" + danmu.Message;
+                        break;
+                    case SendGiftEventArgs gift:
+                        //Debug.Log("G:"+gift.GiftName);
+                        //gtext.text = "G:" + gift.GiftName;
+                        break;
+                    case GuardBuyEventArgs guard:
+                        // Debug.LogError("JZ:" + guard.GiftName);
+                        break;
+                    case WelcomeEventArgs Welcome:
 
-                    }
-                    // Console.WriteLine("WebSocket收到弹幕数据:{0}:{1}", danmu.UserName, danmu.Message);
-                    //Debug.Log("M:" + danmu.Message);
-                    //mtext.text = "M:" + danmu.Message;
-                    break;
-                case SendGiftEventArgs gift:
-                    //Debug.Log("G:"+gift.GiftName);
-                    //gtext.text = "G:" + gift.GiftName;
-                    break;
-                case GuardBuyEventArgs guard:
-                    // Debug.LogError("JZ:" + guard.GiftName);
-                    break;
-                case WelcomeEventArgs Welcome:
+                        break;
+                    case ActivityBannerEventArgs activityBannerEventArgs:
 
-                    break;
-                case ActivityBannerEventArgs activityBannerEventArgs:
+                        break;
 
-                    break;
+                    default:
+                        // Debug.LogError("???" + e.JsonObject);
+                        // Debug.LogError(LitJson.JsonMapper.ToJson(e.JsonObject));
 
-                default:
-                    // Debug.LogError("???" + e.JsonObject);
-                    // Debug.LogError(LitJson.JsonMapper.ToJson(e.JsonObject));
-
-                    break;
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+                
             }
         }
 
@@ -433,7 +451,7 @@ namespace PlayW
             {
                 case "bilibili":
                     {
-                        if (bilibili.根据房间号获取房间信息.是否正在直播(DD.DownIofo.房间_频道号))
+                        if (bilibili.根据房间号获取房间信息.是否正在直播(DD.DownIofo.房间_频道号,true))
                         {
 
                             new Task((() => 
@@ -490,7 +508,7 @@ namespace PlayW
                             InfoLog.InfoPrintf(DD.DownIofo.房间_频道号 + "房间:" + DD.DownIofo.主播名称 + " 下播放，录制完成", InfoLog.InfoClass.下载必要提示);
                             this.Dispatcher.Invoke(new Action(delegate
                             {
-                                提示文字.Content = "该房间/频道 直播停止..";
+                                提示文字.Content = "======该房间/频道 直播停止，请关闭播放窗口======";
                                 return;
                             }));
                         }
@@ -690,25 +708,37 @@ namespace PlayW
 
         private void Image_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
         {
-            播放状态 = false;
-            new Task(() =>
-            {
-                try
-                {
-                    if (this.VlcControl.SourceProvider.MediaPlayer != null)
-                    {
-                        this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
-                    }
-                    this.VlcControl.Dispose();
-                }
-                catch (Exception)
-                {
-                }
-            }).Start();
-            DD.DownIofo.播放状态 = false;
-            DD.DownIofo.备注 = "播放串口关闭";
-            DD.DownIofo.结束时间 = Convert.ToInt32((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
+            关闭窗口();
             this.Close();
+        }
+        private void 关闭窗口()
+        {
+            try
+            {
+                播放状态 = false;
+                new Task(() =>
+                {
+                    try
+                    {
+                        if (this.VlcControl.SourceProvider.MediaPlayer != null)
+                        {
+                            this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
+                        }
+                        this.VlcControl.Dispose();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }).Start();
+                DD.DownIofo.播放状态 = false;
+                DD.DownIofo.备注 = "播放窗口关闭";
+                DD.DownIofo.结束时间 = Convert.ToInt32((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
+            }
+            catch (Exception C)
+            {
+                System.Windows.MessageBox.Show("发生了意外的错误，请把该错误内容发送给开发者，谢谢\n错误内容：\n" + C.ToString());
+            }
+           
         }
 
         private void 置顶选择_Checked(object sender, RoutedEventArgs e)
@@ -859,6 +889,11 @@ namespace PlayW
             {
                 弹幕发送提示.Content = "发送内容不能为空或超过20个字符！";
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            关闭窗口();
         }
     }
 }

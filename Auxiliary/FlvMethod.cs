@@ -23,15 +23,7 @@ namespace Auxiliary
             if(!File.Exists(path1))
             {
                 InfoLog.InfoPrintf("续录文件[" + path1 + "]文件不存在，不符合合并条件，文件合并取消", InfoLog.InfoClass.Debug);
-                if (File.Exists(path2))
-                {
-                    return path2;
-                }
-                else
-                {
-                    return null;
-                }
-
+                return null;
             }
             else if (!File.Exists(path2))
             {
@@ -47,7 +39,10 @@ namespace Auxiliary
             {
                 output = A.File1Url.Replace("_202", "⒂").Split('⒂')[0] + "_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".flv";
             }
-
+            if(File.Exists(output))
+            {
+                output.Replace(".flv","1.flv");
+            }
             using (FileStream fs1 = new FileStream(path1, FileMode.Open))
             using (FileStream fs2 = new FileStream(path2, FileMode.Open))
             //using (FileStream fs3 = new FileStream(path3, FileMode.Open))
@@ -73,8 +68,11 @@ namespace Auxiliary
                     fsMerge.Dispose();
                     try
                     {
-                        File.Delete(path1);
-                        File.Delete(path2);
+                        if(File.Exists(output))
+                        {
+                            File.Delete(path1);
+                            File.Delete(path2);
+                        }
                     }
                     catch (Exception)
                     {
@@ -104,22 +102,25 @@ namespace Auxiliary
                 
             }
         }
+        /// <summary>
+        /// 调用ffmpeg修复阿B的傻逼时间轴，顺便封装成MP4
+        /// </summary>
+        /// <param name="Filename">转码文件</param>
         public static void 转码(string Filename)
         {
             if (MMPU.转码功能使能)
             {
                 try
                 {
-                    Process process = new Process();
-
-                    process.StartInfo.FileName = "./libffmpeg/ffmpeg.exe";  // 这里也可以指定ffmpeg的绝对路径
+                    Process process = new Process();                   
+                    process.StartInfo.FileName = "./libffmpeg/ffmpeg.exe";  
                     process.StartInfo.Arguments = "-i " + Filename + " -vcodec copy -acodec copy " + Filename.Replace(".flv", "") + ".mp4";
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardInput = true;
                     process.StartInfo.RedirectStandardError = true;
-                    process.ErrorDataReceived += new DataReceivedEventHandler(Output);  // 捕捉ffmpeg.exe的错误信息
+                    process.ErrorDataReceived += new DataReceivedEventHandler(Output);  // 捕捉ffmpeg.exe的信息
                     DateTime beginTime = DateTime.Now;
 
                     process.Start();

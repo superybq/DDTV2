@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Auxiliary.LiveChatScript;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ namespace Auxiliary
     public class RoomInit:bilibili
     {
         public static string RoomConfigFile = MMPU.getFiles("RoomConfiguration", "./RoomListConfig.json");
-        public static List<BiliWebSocket> biliWebSocket = new List<BiliWebSocket>();
+       // public static List<BiliWebSocket> biliWebSocket = new List<BiliWebSocket>();
 
         public static List<RL> bilibili房间主表 = new List<RL>();
         public static List<RL> 之前的bilibili房间主表状态 = new List<RL>();
@@ -41,7 +42,8 @@ namespace Auxiliary
             public string 原名 { set; get; }
             public string 平台 { set; get; }
             public string youtubeVideoId { set; get; }
-            
+            public LiveChatListener liveChatListener { set; get; }
+
         }
 
         public class RL
@@ -81,28 +83,35 @@ namespace Auxiliary
             InitializeRoomList(0,false,false);
 
             bilibili.start();
-            youtube.start();
+            //youtube.start();
 
             Task.Run(async () =>
             {
                 InfoLog.InfoPrintf("开始周期轮询bilibili房间开播状态", InfoLog.InfoClass.Debug);
                 while (true)
                 {
-                    刷新B站房间列表();
-                    bilibili房间信息更新次数++;
-                    await Task.Delay(5 * 1000).ConfigureAwait(false);
+                    try
+                    {
+                        刷新B站房间列表();
+                        bilibili房间信息更新次数++;
+                        await Task.Delay(5 * 1000).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        InfoLog.InfoPrintf($"在常规主线程B2中发生严重错误，错误堆栈内容:\n{e}",InfoLog.InfoClass.系统错误信息);
+                    }
                 }
             });
-            Task.Run(async () =>
-            {
-                InfoLog.InfoPrintf("开始周期轮询youtube频道开播状态", InfoLog.InfoClass.Debug);
-                while (true)
-                {
-                    刷新youtube站房间列表();
-                    youtube房间信息更新次数++;
-                    await Task.Delay(5 * 1000).ConfigureAwait(false);
-                }
-            });
+            //Task.Run(async () =>
+            //{
+            //    InfoLog.InfoPrintf("开始周期轮询youtube频道开播状态", InfoLog.InfoClass.Debug);
+            //    while (true)
+            //    {
+            //        刷新youtube站房间列表();
+            //        youtube房间信息更新次数++;
+            //        await Task.Delay(5 * 1000).ConfigureAwait(false);
+            //    }
+            //});
         }
         private static void 刷新B站房间列表()
         {
@@ -146,7 +155,7 @@ namespace Auxiliary
                         {
                             if (B站更新刷新次数 > 5)
                             {
-                                MMPU.弹窗.Add(3000, "自动录制", 最新的状态.名称 + "/" + 最新的状态.原名 + "开始直播了，开始自动录制");
+                                MMPU.弹窗.Add(3000, "自动录制", 最新的状态.名称 + "/" + 最新的状态.原名 + "直播间状态发生了变化，也许是开播了");
 
                             }
                             if (MMPU.初始化后启动下载提示)
@@ -155,11 +164,25 @@ namespace Auxiliary
                                 MMPU.弹窗.Add(3000, "自动录制", "有关注的正在直播,根据配置列表开始自动录制");
                             }
 
-                            InfoLog.InfoPrintf(最新的状态.名称 + "/" + 最新的状态.原名 + "开始直播了，开始自动录制", InfoLog.InfoClass.下载必要提示);
+                            InfoLog.InfoPrintf(最新的状态.名称 + "/" + 最新的状态.原名 + "直播间状态发生了变化", InfoLog.InfoClass.下载必要提示);
                             //Console.WriteLine(最新的状态.名称);
                             new Task(() =>
                             {
-                                Downloader.新建下载对象(之前的状态.平台, 之前的状态.唯一码, bilibili.根据房间号获取房间信息.获取标题(之前的状态.唯一码), Guid.NewGuid().ToString(), bilibili.根据房间号获取房间信息.下载地址(之前的状态.唯一码), "自动录制", true, 最新的状态.名称 + "-" + 最新的状态.原名, false, null).DownIofo.备注 = "自动录制下载中";
+                                string 下载地址 = bilibili.根据房间号获取房间信息.下载地址(之前的状态.唯一码);
+                                if(string.IsNullOrEmpty(下载地址))
+                                {
+                                    InfoLog.InfoPrintf("解析下载地址失败，一般是该房间未开播或已加密", InfoLog.InfoClass.下载必要提示);
+                                    return;
+                                }
+                                Downloader DLL =  Downloader.新建下载对象(之前的状态.平台, 之前的状态.唯一码, bilibili.根据房间号获取房间信息.获取标题(之前的状态.唯一码), Guid.NewGuid().ToString(), 下载地址, "自动录制", true, 最新的状态.名称 + "-" + 最新的状态.原名, false, null);
+                                if(DLL!=null)
+                                {
+                                    if (string.IsNullOrEmpty(DLL.DownIofo.备注))
+                                    {
+                                        DLL.DownIofo.备注 = "新建自动录制任务..等待数据..";
+                                    }
+                                }
+                             
                             }).Start();
                         }
                         break;
@@ -403,14 +426,14 @@ namespace Auxiliary
 
         public class RoomCadr
         {
-            public string Name { get; set; }
-            public string OfficialName { set; get; } = "";
-            public string RoomNumber { get; set; }
-            public string Types { get; set; } = "NU";
-            public bool status { get; set; } = false;
-            public bool VideoStatus { get; set; } = false;
-            public bool RemindStatus { get; set; } = false;
-            public bool LiveStatus { get; set; } = false;
+            public string Name { get; set; }//中文名
+            public string OfficialName { set; get; } = "";//官方频道名称
+            public string RoomNumber { get; set; }//直播间房间号
+            public string Types { get; set; } = "bilibili";//平台类型,现在默认bilibili，不要改成其他的
+            public bool status { get; set; } = false;//直播状态缓存，默认为false
+            public bool VideoStatus { get; set; } = false;//是否开播自动录制，默认为false
+            public bool RemindStatus { get; set; } = false;//是否开播气泡提示，默认false
+            public bool LiveStatus { get; set; } = false;//当前的直播状态，默认为false
 
             public string Mid { get; set; }
 

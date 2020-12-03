@@ -7,9 +7,9 @@ DDTV1.0的精神续作.jpg
 ***
 
 ## 写给不会使用gayhub的：怎么下载？？？怎么下载？？？怎么下载？？？
-↓↓↓↓↓↓↓↓↓↓↓↓↓↓点击图片跳转下载页面↓↓↓↓↓↓↓↓↓↓↓↓↓↓  
-[![](https://user-images.githubusercontent.com/9378097/54915191-8e3f0f80-4f31-11e9-8bbb-b4f3fb0ead6b.png)](https://github.com/CHKZL/DDTV2/releases/latest)  
-↑↑↑↑↑↑↑↑↑↑↑↑↑↑点击图片跳转下载页面↑↑↑↑↑↑↑↑↑↑↑↑↑↑  
+↓↓↓↓↓↓↓↓↓↓↓↓↓↓点击跳转下载页面↓↓↓↓↓↓↓↓↓↓↓↓↓↓  
+[点击跳转到releases下载页面](https://github.com/CHKZL/DDTV2/releases/latest)  
+↑↑↑↑↑↑↑↑↑↑↑↑↑↑点击跳转下载页面↑↑↑↑↑↑↑↑↑↑↑↑↑↑  
 ===如果实在是下载不动也可以加群在群共享中下载,群：307156949===
 
 # 为何要写这个东西
@@ -84,9 +84,9 @@ DDNA列表(各平台当前直播情况):
 
 ![干净播放窗口](./软件图/干净播放界面.png)
 
-播放卡顿重连:
+性能消耗(我是AMD 3950X):
 
-![播放重连](./软件图/卡顿重连.png)
+![播放重连](./软件图/性能消耗2.png)
 
 # 兼容性
 需要.net4.7.2环境  
@@ -95,15 +95,5 @@ DDNA列表(各平台当前直播情况):
 
 # 使用到的第三方组件
 * [BiliAccount](https://github.com/LeoChen98/BiliAccount)
-
-# 捐助
-### 捐助表示您对我这个项目的认可，也能激励我继续开发更多好的项目
-
-![生活](https://github.com/CHKZL/DDTV2/blob/master/DDTV_New/%E7%94%9F%E6%B4%BB.png)
-
-* 支付宝
-
-![支付宝](https://github.com/CHKZL/DDTV/blob/master/src/ZFB.png)
-* 微信
-
-![微信](https://github.com/CHKZL/DDTV/blob/master/src/WX.png)
+* [FFmpeg](https://github.com/FFmpeg/FFmpeg)
+* [vtbs.moe](https://github.com/dd-center/vtbs.moe)

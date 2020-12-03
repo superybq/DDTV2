@@ -12,21 +12,23 @@
 * 录制完成后自动合并文件
 * 多路异步下载
 * 在网页直接查看运行状态\日志\下载文件列表
-* 直接启动后在web端或直接打开图片文件扫码扫码登陆
+* 登陆买票后可以录制付费直播内容
+* 在录制的同时储存弹幕信息为ass文件
   
-有啥试用功能想法欢迎加群：307156949讨论
+有任何问题和需要增加的功能欢迎加群：307156949直接说
 
 # 使用说明
     
-有三个版本，其中linux_x64是给64位系统的linux使用，如阿里云和乌班图x64等，linux_arm为给树莓派、路由器等ARM设备使用    
+DDTVLiveRec的releases只提供依赖框架的可移植版本，请确保环境已经安装.NET5的运行时(.NET5.0 runtime)
+如未安装不能启动，请到参考[微软文档](https://docs.microsoft.com/zh-cn/dotnet/core/install/)进行运行时的安装后运行DDTVLiveRec
 
 启动准备:  
-1. 因为DDTVLiveRec是根据DDTV2部分功能移植而来，所以需要依赖DDTV的配置文件，在使用前请先保证有一个可以正常使用的DDTV最新版本，并且已经登录。 
-2. 把DDTV目录里配置好的【RoomListConfig.json】复制到对应的DDTVLive_for_linux文件夹中，该文件是自动录制的房间配置文件
-3. 启动DDTVLiveRec文件(win x64为DDTVLiveRec.exe)
-4. (DDTVLive会监听11419端口，如果防火墙阻止请允许，该端口用于信息反馈的本地web服务端)
+1.因为DDTVLiveRec是根据DDTV2部分功能移植而来，所以需要依赖DDTV的配置文件，在使用前请先保证有一个可以正常使用的DDTV最新版本，并且已经登录。
+2.把DDTV目录里登陆并配置好的【RoomListConfig.json】和【BiliUser.ini】复制到对应的DDTVLive文件夹中，该文件是房间配置文件和bilibili登陆验证文件
+3.Linux系统使用[dotnet ./DDTVLiveRec.dll]命令直接启动或者是用类似[nohup dotnet ./DDTVLiveRec.dll &]之类的命令后台启动。  windows系统直接使用[DDTVLiveRec.exe]启动
+4.(DDTVLive会监听11419端口，如果防火墙阻止请允许，该端口用于信息反馈的本地web服务端)
 
-* 录制的视频文件在对应的DDTVLive_for_linux文件夹中的["tmp"]文件夹内
+* 录制的视频文件在文件夹中的["tmp"]文件夹内
 
 
 web服务端:  
@@ -34,18 +36,19 @@ web服务端:
 [http://IP:11419/log]：DDTVLiveRec日志信息  
 [http://IP:11419/file]：DDTVLiveRec录制的文件列表  
 [http://IP:11419/list]：DDTVLiveRec下载列表状态查看  
+[http://IP:11419/config]：DDTVLiveRec的配置修改命令列表  
+[http://IP:11419/systeminfo]：DDTVLiveRec的系统总览页面
 
 
 
-
-录制配置：RoomListConfig.json说明：
-格式和解析方式和DDTV一样，格式为若干个，releases发布的压缩包里附带了一个参考的文件。   
+# 录制配置：RoomListConfig.json说明：
+格式和解析方式和DDTV一样，格式为json字符串，releases发布的压缩包里附带了一个参考的文件。   
 房间配置文件格式为
 ```json
 {
-            "Name": "星街彗星",
-            "OfficialName": "星街すいせい",
-            "RoomNumber": "190577",
+            "Name": "绯赤艾莉欧",
+            "OfficialName": "緋赤エリオ",
+            "RoomNumber": "21396545",
             "Types": "bilibili",
             "status": false,
             "VideoStatus": false,
@@ -53,7 +56,7 @@ web服务端:
             "LiveStatus": false
 }
 ```
-这样的内容组成，其中
+多个这种格式的内容组成，其中
 * ["Name"]为翻译名称
 * ["OfficialName"]为官方名称
 * ["RoomNumber"]为BiliLive房间号
@@ -61,16 +64,20 @@ web服务端:
 * ["status"]为DDTV需要的配置文件，在DDTVLive中无用，默认为false
 * ["VideoStatus"]为是否开播自动录制的标识，false为检测到开播后不录制，true为检测到开播后自动录制
 * ["RemindStatus"]为DDTV开播弹窗提醒标识，在DDTVLive中无用，默认为false
-* ["RoomNumber"]为DDTV直播状态标识，在DDTVLive中无用，默认为false
+* ["LiveStatus"]为DDTV直播状态标识，在DDTVLive中无用，默认为false
 
 
-也就是说["VideoStatus"]为false的项不会自动录制，请注意    
+**也就是说["VideoStatus"]为false的项不会自动录制，请注意**   
 使用DDTVLiveRec需要注意的为["Name"]["OfficialName"]["RoomNumber"]["VideoStatus"]  
 
-# 界面(下面的界面不是最新的)
+### 一定要确保符合参考文件的JSON文件格式！！！
+
+# 运行界面
 主界面   
 ![运行界面](./软件图/主界面.png)    
 
+系统概况预览  
+![系统概况预览](./软件图/系统详情.png)   
 
 WEB下载状况查看界面   
 ![WEB下载状况查看界面](./软件图/下载信息界面.png)
@@ -78,14 +85,13 @@ WEB下载状况查看界面
 WEB文件列表界面   
 ![WEB文件列表界面](./软件图/下载文件信息列表.png)   
 
-WEB日志界面  
-![WEB日志界面](./软件图/日志信息界面.png)   
+
 
 
 ## 写给不会使用gayhub的：怎么下载？？？怎么下载？？？怎么下载？？？
-↓↓↓↓↓↓↓↓↓↓↓↓↓↓点击图片跳转下载页面↓↓↓↓↓↓↓↓↓↓↓↓↓↓  
-[![](https://user-images.githubusercontent.com/9378097/54915191-8e3f0f80-4f31-11e9-8bbb-b4f3fb0ead6b.png)](https://github.com/CHKZL/DDTV2/releases/latest)  
-↑↑↑↑↑↑↑↑↑↑↑↑↑↑点击图片跳转下载页面↑↑↑↑↑↑↑↑↑↑↑↑↑↑  
+↓↓↓↓↓↓↓↓↓↓↓↓↓↓点击跳转下载页面↓↓↓↓↓↓↓↓↓↓↓↓↓↓  
+[点击跳转到releases下载页面](https://github.com/CHKZL/DDTV2/releases/latest)  
+↑↑↑↑↑↑↑↑↑↑↑↑↑↑点击跳转下载页面↑↑↑↑↑↑↑↑↑↑↑↑↑↑   
 ===如果实在是下载不动也可以加群在群共享中下载,群：307156949===
 
 
@@ -99,15 +105,5 @@ WEB日志界面
 
 # 使用到的第三方组件
 * [BiliAccount](https://github.com/LeoChen98/BiliAccount)
-
-# 捐助
-### 捐助表示您对我这个项目的认可，也能激励我继续开发更多好的项目
-
-![生活](https://github.com/CHKZL/DDTV2/blob/master/DDTV_New/%E7%94%9F%E6%B4%BB.png)
-
-* 支付宝
-
-![支付宝](https://github.com/CHKZL/DDTV/blob/master/src/ZFB.png)
-* 微信
-
-![微信](https://github.com/CHKZL/DDTV/blob/master/src/WX.png)
+* [FFmpeg](https://github.com/FFmpeg/FFmpeg)
+* [vtbs.moe](https://github.com/dd-center/vtbs.moe)
