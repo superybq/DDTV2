@@ -190,6 +190,8 @@ namespace Auxiliary
                 {
                     if (MTPlist.Contains(int.Parse(item.房间号)))
                     {
+                        RoomInit.RoomInfo nowInfo = GetRoomInfoFromVbts(item.房间号);
+                        item.标题 = nowInfo?.标题;
                         Vtbs存在的直播间.Add(item);
                     }
                     else
@@ -910,6 +912,45 @@ namespace Auxiliary
 
         }
 
+        public static RoomInit.RoomInfo GetRoomInfoFromVbts(string roomId)
+        {
+            //https://api.vtbs.moe/v1/room/:roomid
+            string roomHtml;
+            try
+            {
+                roomHtml = MMPU.使用WC获取网络内容("https://api.vtbs.moe/v1/room/" + roomId);
+            }
+            catch (Exception e)
+            {
+                InfoLog.InfoPrintf(roomId + "获取房间信息失败:" + e.Message, InfoLog.InfoClass.Debug);
+                return null;
+            }
+
+            try
+            {
+                JObject result = JObject.Parse(roomHtml);
+                string uid = result["uid"].ToString();
+
+                RoomInit.RoomInfo roominfo = new RoomInit.RoomInfo
+                {
+                    房间号 = result["roomId"].ToString(),
+                    标题 = result["title"].ToString().Replace(" ", "").Replace("/", "").Replace("\\", "").Replace("\"", "").Replace(":", "").Replace("*", "").Replace("?", "").Replace("<", "").Replace(">", "").Replace("|", ""),
+                    //直播状态 = result["live_status"].ToString() == "1" ? true : false,
+                    //UID = result["data"]["uid"].ToString(),
+                    //直播开始时间 = result["data"]["live_time"].ToString(),
+                    //平台 = "bilibili"
+                };
+                //InfoLog.InfoPrintf("获取到房间信息:" + roominfo.UID + " " + (roominfo.直播状态 ? "已开播" : "未开播") + " " + (roominfo.直播状态 ? "开播时间:" + roominfo.直播开始时间 : ""), InfoLog.InfoClass.Debug);
+                //DataCache.CacheCount++;
+                return roominfo;
+            }
+            catch (Exception e)
+            {
+                InfoLog.InfoPrintf(roomId + "房间信息解析失败:" + e.Message, InfoLog.InfoClass.Debug);
+                return null;
+            }
+
+        }
         public static RoomInit.RoomInfo GetRoomInfo(string originalRoomId)
         {
             string roomHtml;

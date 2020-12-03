@@ -63,7 +63,7 @@ namespace DDTV_New
             //    DDTV关闭事件();
             //    return;
             //}
-                ViewModel = new MainViewModel();
+            ViewModel = new MainViewModel();
 
             this.WhenActivated(disposable =>
             {
@@ -147,7 +147,7 @@ namespace DDTV_New
                 NewThreadTask.Run(runOnLocalThread =>
                  {
                      bilibili.周期更新B站房间状态();
-                 }, this);            
+                 }, this);
                 if (!string.IsNullOrEmpty(MMPU.Cookie))
                 {
                     登陆B站账号.IsEnabled = false;
@@ -289,7 +289,7 @@ namespace DDTV_New
                 修改默认音量.Value = MMPU.默认音量;
                 默认下载路径.Text = MMPU.下载储存目录;
 
-                
+
 
                 //读取字幕弹幕颜色
                 {
@@ -450,7 +450,7 @@ namespace DDTV_New
                 });
             }
             //剪贴板监听
-            Thread CPT = new Thread(() => 
+            Thread CPT = new Thread(() =>
             {
                 string 剪贴板缓存 = "";
                 while (true)
@@ -520,7 +520,7 @@ namespace DDTV_New
             NewThreadTask.Loop(runOnLocalThread =>
             {
                 bool 动态推送1开关 = MMPU.TcpSend(
-                        Server.RequestCode.GET_TOGGLE_DYNAMIC_NOTIFICATION, "{}", true,50)
+                        Server.RequestCode.GET_TOGGLE_DYNAMIC_NOTIFICATION, "{}", true, 50)
                         == "1" ? true : false;
 
                 if (动态推送1开关)
@@ -530,7 +530,8 @@ namespace DDTV_New
                     runOnLocalThread(() => ViewModel.PushNotification = 动态推送内容);
                 }
             }, this, 3600 * 1000);
-            NewThreadTask.Run(()=> {
+            NewThreadTask.Run(() =>
+            {
 
                 if (MMPU.启动模式 == 0)
                 {
@@ -588,7 +589,7 @@ namespace DDTV_New
                                 Process.Start(Server.PROJECT_ADDRESS);
                             }
                         }
-                    }                   
+                    }
                 }
             });
             //推送内容1
@@ -609,8 +610,9 @@ namespace DDTV_New
             {
                 MMPU.已经提示wss连接错误 = !MMPU.已经提示wss连接错误;
                 InfoLog.InfoPrintf($"网络状态不佳，多次尝试保持房间监控长连接失败，请关闭非VTBS数据来源房间监控，因为多次被阿B服务器拒绝连接，部分房间状态监控更新已停止", InfoLog.InfoClass.系统错误信息);
-                runOnLocalThread(() => {
-                    MMPU.弹窗.Add(30000,"网络连接失败/网络质量差", "网络状态不佳，多次尝试保持房间监控长连接失败，请关闭非VTBS数据来源房间监控，因为多次被阿B服务器拒绝连接，部分房间状态监控更新已停止。");
+                runOnLocalThread(() =>
+                {
+                    MMPU.弹窗.Add(30000, "网络连接失败/网络质量差", "网络状态不佳，多次尝试保持房间监控长连接失败，请关闭非VTBS数据来源房间监控，因为多次被阿B服务器拒绝连接，部分房间状态监控更新已停止。");
                     全局提示.Content = $"多次尝试连接阿B服务器均失败，网络状态不佳，部分房间监控已停止。点击我去关闭非VTBS数据源房间监控";
                     全局提示.Visibility = Visibility.Visible;
                     全局提示.MouseDown += 全局提示_MouseDown;
@@ -672,12 +674,12 @@ namespace DDTV_New
                 runOnLocalThread(() => LiveList.Items.Clear());
                 foreach (var item in 正在直播)
                 {
-                    runOnLocalThread(() => LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名));
+                    runOnLocalThread(() => LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名, item.标题));
                     i++;
                 }
                 foreach (var item in 未直播)
                 {
-                    runOnLocalThread(() => LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名));
+                    runOnLocalThread(() => LiveListAdd(i, item.名称, item.直播状态, item.平台, item.是否提醒, item.是否录制视频, item.房间号, item.原名, ""));
                     i++;
                 }
             }
@@ -696,7 +698,7 @@ namespace DDTV_New
                     {
                         MessageBox.Show("房间配置文件为空，没有监控中的房间，请手动添加或在设置界面登录后一键导入");
                     }
-                 
+
                 }
             }
         }
@@ -707,18 +709,19 @@ namespace DDTV_New
             A.ShowDialog();
         }
 
-        public void LiveListAdd(int 编号, string 名称, bool 状态, string 平台, bool 直播提醒, bool 是否录制, string 唯一码, string 原名)
+        public void LiveListAdd(int 编号, string 名称, bool 状态, string 平台, bool 直播提醒, bool 是否录制, string 唯一码, string 原名, string 标题)
         {
-            LiveList.Items.Add(new 
-            { 
-                编号 = 编号, 
-                名称 = 名称, 
-                状态 = 状态 ? "●直播中" : "○未直播", 
-                平台 = 平台, 
-                是否提醒 = 直播提醒 ? "√" : "", 
-                是否录制 = 是否录制 ? "√" : "", 
-                唯一码 = 唯一码, 
-                原名 = 原名 
+            LiveList.Items.Add(new
+            {
+                编号 = 编号,
+                名称 = 名称,
+                状态 = 状态 ? "●直播中" : "○未直播",
+                平台 = 平台,
+                是否提醒 = 直播提醒 ? "√" : "",
+                是否录制 = 是否录制 ? "√" : "",
+                唯一码 = 唯一码,
+                原名 = 原名,
+                标题 = 标题
             });
         }
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -935,7 +938,7 @@ namespace DDTV_New
             {
                 RoomInit.RoomInfo roomInfo = new RoomInfo();
                 System.Windows.Controls.ListView LV = (System.Windows.Controls.ListView)sender;
-               
+
                 string 平台 = string.Empty;
                 runOnLocalThread(() =>
                 {
@@ -962,10 +965,11 @@ namespace DDTV_New
                 }
                 try
                 {
-                    runOnLocalThread(() => {
+                    runOnLocalThread(() =>
+                    {
                         等待框.Visibility = Visibility.Visible;
                     });
-                    
+
                 }
                 catch (Exception) { }
 
@@ -974,10 +978,11 @@ namespace DDTV_New
                 {
                     if (平台 == "bilibili")
                     {
-                        runOnLocalThread(() => {
+                        runOnLocalThread(() =>
+                        {
                             roomInfo = bilibili.GetRoomInfo(MMPU.获取livelist平台和唯一码.唯一码(LV.SelectedItems[0].ToString()));
                         });
-                        
+
                         if (!roomInfo.直播状态)
                         {
                             MessageBox.Show("该房间未直播");
@@ -997,10 +1002,11 @@ namespace DDTV_New
                 }
                 catch (Exception)
                 {
-                    runOnLocalThread(() => {
+                    runOnLocalThread(() =>
+                    {
                         等待框.Visibility = Visibility.Collapsed;
                     });
-                    
+
                     return;
                 }
                 string 唯一码 = roomInfo.房间号;
@@ -1044,7 +1050,8 @@ namespace DDTV_New
                                 {
                                     this.Dispatcher.Invoke(new Action(delegate
                                     {
-                                        runOnLocalThread(() => {
+                                        runOnLocalThread(() =>
+                                        {
                                             打开直播列表(下载对象);
                                             try
                                             {
@@ -1054,9 +1061,9 @@ namespace DDTV_New
                                             {
                                             }
                                         });
-                                        
+
                                         MMPU.当前直播窗口数量++;
-                                        
+
 
                                     }));
                                 });
@@ -1078,8 +1085,8 @@ namespace DDTV_New
                     ERR.ShowDialog();
                     return;
                 }
-            },this);
-           
+            }, this);
+
         }
         public void 打开直播列表(Downloader DL)
         {
@@ -1198,7 +1205,7 @@ namespace DDTV_New
                 }
                 catch (Exception e)
                 {
-                    InfoLog.InfoPrintf("关闭播放窗口出现错误:"+e.ToString(), InfoLog.InfoClass.Debug);
+                    InfoLog.InfoPrintf("关闭播放窗口出现错误:" + e.ToString(), InfoLog.InfoClass.Debug);
                 }
             });
         }
@@ -1293,7 +1300,7 @@ namespace DDTV_New
             {
                 data = new List<RoomCadr>()
             };
-            while (bilibili房间主表长度 + youtube房间主表长度 != bilibili房间主表.Count() + youtube房间主表.Count() 
+            while (bilibili房间主表长度 + youtube房间主表长度 != bilibili房间主表.Count() + youtube房间主表.Count()
                 && bilibili房间主表长度 + youtube房间主表长度 != 0)
             {
                 Thread.Sleep(10);
@@ -1355,14 +1362,15 @@ namespace DDTV_New
                 else
                 {
                     RB.data.Add(new RoomCadr
-                    { 
+                    {
                         LiveStatus = 房间表[i].直播状态,
-                        Name = 房间表[i].名称, OfficialName = 房间表[i].原名,
+                        Name = 房间表[i].名称,
+                        OfficialName = 房间表[i].原名,
                         RoomNumber = 房间表[i].唯一码,
                         VideoStatus = 房间表[i].是否录制,
                         Types = 房间表[i].平台,
                         RemindStatus = 房间表[i].是否提醒,
-                        status = false 
+                        status = false
                     });
                     if (RoomInit.根据唯一码获取直播状态(房间表[i].唯一码))
                     {
@@ -1386,19 +1394,20 @@ namespace DDTV_New
             }
             NewThreadTask.Run(runOnLocalThread =>
             {
-                runOnLocalThread(() => {
+                runOnLocalThread(() =>
+                {
                     try
                     {
                         等待框.Visibility = Visibility.Visible;
                     }
                     catch (Exception) { }
                 });
-               
+
                 switch (MMPU.获取livelist平台和唯一码.平台(已选内容))
                 {
                     case "bilibili":
                         {
-                            if (!bilibili.根据房间号获取房间信息.是否正在直播(MMPU.获取livelist平台和唯一码.唯一码(已选内容),false))
+                            if (!bilibili.根据房间号获取房间信息.是否正在直播(MMPU.获取livelist平台和唯一码.唯一码(已选内容), false))
                             {
                                 MessageBox.Show("该房间当前未直播");
                                 return;
@@ -1465,24 +1474,25 @@ namespace DDTV_New
                     return;
                 }
                 Downloader 下载对象 = Downloader.新建下载对象(MMPU.获取livelist平台和唯一码.平台(已选内容), MMPU.获取livelist平台和唯一码.唯一码(已选内容), 标题, GUID, 下载地址, "手动下载任务", true, MMPU.获取livelist平台和唯一码.名称(已选内容) + "-" + MMPU.获取livelist平台和唯一码.原名(已选内容), false, null);
-               if(下载对象==null)
+                if (下载对象 == null)
                 {
                     MessageBox.Show("已经存在该直播间的录制任务，本次下载请求已撤销");
                 }
                 //MessageBox.Show("下载任务添加完成");
-               
-                    runOnLocalThread(() => {
-                        try
-                        {
-                            等待框.Visibility = Visibility.Collapsed;
-                        }
-                        catch (Exception)
-                        { }
-                    });
-                
+
+                runOnLocalThread(() =>
+                {
+                    try
+                    {
+                        等待框.Visibility = Visibility.Collapsed;
+                    }
+                    catch (Exception)
+                    { }
+                });
+
             }, this);
 
-           
+
         }
 
         private void 显示下载队列按钮点击事件(object sender, RoutedEventArgs e)
@@ -1760,7 +1770,8 @@ namespace DDTV_New
                     {
                         runOnLocalThread(() => tcAOE直播列表.Items.Add(new { 名称 = "", 标题 = "当前没有在TwitCasting直播的VTB", 观看人数 = "", 直播开始时间 = "", 直播URL = "" }));
                     }
-                } catch (Exception) { }
+                }
+                catch (Exception) { }
 
                 runOnLocalThread(() =>
                 {
@@ -1817,7 +1828,7 @@ namespace DDTV_New
                 //增加房间提示信息.Content = $"导入成功！原有:{已经存在的数量}个，新增VTB/VUP数：{增加的数量}";
                 MessageBox.Show(TEXT);
                 等待框.Visibility = Visibility.Collapsed;
-            }, this,false);
+            }, this, false);
 
 
             //if (string.IsNullOrEmpty(MMPU.Cookie))
@@ -2000,13 +2011,13 @@ namespace DDTV_New
         {
             if (开机自启动按钮.IsChecked == true)
             {
-              
+
                 MMPU.开机自启动 = true;
                 MMPU.setFiles("BootUp", "1");
             }
             else
             {
-               
+
                 MMPU.开机自启动 = false;
                 MMPU.setFiles("BootUp", "0");
             }
