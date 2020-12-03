@@ -12,6 +12,7 @@ DDTV1.0的精神续作.jpg
 | [DDTVLiveRec](https://github.com/CHKZL/DDTV2/tree/master/DDTVLiveRec) | .NET Core3.1 | Windows/Linux | 适用于多平台的录制工具 |
 | Auxiliary  | .NET 4.7.2(没用特殊的库,兼容Core3.1) | Windows | 为项目写的各种共用方法依赖 |
 | DDTVLiveRecWebServer  | .NET Core3.1 | Windows/Linux | 为项目提供WEB访问查询功能 |
+| PlayW  | .NET 4.7.2 | Windows | 用于播放视频流和弹幕解析 |
 
 
 .NET Core3.1理论上支持直接编译为MacOS可用的二进制文件程序，但是因为我没有MacOS没办法测试((()))
@@ -51,6 +52,7 @@ DDTVLiveRec
 # 使用到的第三方组件
 * [BiliAccount](https://github.com/LeoChen98/BiliAccount)
 * [FFmpeg](https://github.com/FFmpeg/FFmpeg)
+* [vtbs.moe](https://github.com/dd-center/vtbs.moe)
 
 # 捐助
 ### 捐助表示您对我这个项目的认可，也能激励我继续开发更多好的项目

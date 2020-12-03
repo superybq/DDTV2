@@ -28,7 +28,7 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.2.4a";
+        public static string 版本号 = "2.0.3.3a";
         public static string[] 不检测的版本号 = {};
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
@@ -62,8 +62,9 @@ namespace Auxiliary
         public static bool DDC采集使能 = true;
         public static int DDC采集间隔 = 1000;
         public static int 数据源 = 0;//0：vdb   1：B API
-
-
+        public static bool 是否第一次使用DDTV = true;
+        public static bool 是否有新版本 = true;
+       
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
 
         /// <summary>
@@ -72,11 +73,12 @@ namespace Auxiliary
         /// <param name="模式">//0：DDTV,1：DDTVLive</param>
         public static bool 配置文件初始化(int 模式)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12; //加上这一句
             if (模式 == 0)
             {
                 InfoLog.InfoInit("./DDTVLog.out", new InfoLog.InfoClasslBool()
                 {
-                    Debug = false,
+                    Debug = true,
                     下载必要提示 = true,
                     杂项提示 = true,
                     系统错误信息 = true,
@@ -124,6 +126,10 @@ namespace Auxiliary
                 MMPU.播放器默认宽度 = int.Parse(MMPU.读取exe默认配置文件("PlayWindowW", "800"));
                 //剪切板监听
                 MMPU.剪贴板监听 = MMPU.读取exe默认配置文件("ClipboardMonitoring", "0") == "0" ? false : true;
+                //数据源
+                MMPU.数据源 = int.Parse(MMPU.读取exe默认配置文件("DataSource", "0"));
+                //第一次使用DDTV
+                MMPU.是否第一次使用DDTV = MMPU.读取exe默认配置文件("IsFirstTimeUsing", "1") == "0" ? false :true;
             }
             else if (模式 == 1)
             {
@@ -146,12 +152,23 @@ namespace Auxiliary
             MMPU.转码功能使能 = MMPU.读取exe默认配置文件("AutoTranscoding", "0") == "1" ? true : false;
             #endregion
             InfoLog.InfoPrintf("通用配置加载完成", InfoLog.InfoClass.Debug);
-            #region BiliUser配置文件初始化
-            //账号登陆cookie
 
+            BiliUser配置文件初始化(模式);
+            InfoLog.InfoPrintf("Bilibili账号信息加载完成", InfoLog.InfoClass.Debug);
+            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
+
+            if (MMPU.数据源 == 0)
+            {
+                DDcenter.DdcClient.Connect();
+            }
+            RoomInit.start();
+            return true;
+        }
+        public static void BiliUser配置文件初始化(int 模式)
+        {
+            //账号登陆cookie
             try
             {
-
                 MMPU.Cookie = string.IsNullOrEmpty(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile)) ? "" : Encryption.UnAesStr(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile), MMPU.AESKey, MMPU.AESVal);
             }
             catch (Exception)
@@ -209,13 +226,6 @@ namespace Auxiliary
 
             }
             MMPU.csrf = MMPU.读ini配置文件("User", "csrf", MMPU.BiliUserFile);
-            #endregion
-            InfoLog.InfoPrintf("Bilibili账号信息加载完成", InfoLog.InfoClass.Debug);
-            ServicePointManager.ServerCertificateValidationCallback += (sender, cert, chain, sslPolicyErrors) => true;
-           
-            DDcenter.DdcClient.Connect();
-            RoomInit.start();
-            return true;
         }
         public static void 修改默认音量设置(int A)
         {
@@ -331,14 +341,16 @@ namespace Auxiliary
             }
             return result;
         }
-        public static string 返回网页内容_GET(string url)
+        public static string 返回网页内容_GET(string url,int outTime)
         {
+
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "GET";
             req.ContentType = "application/x-www-form-urlencoded";
-            req.UserAgent = MMPU.UA.Ver.UA(); ;
-
+            req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
+            req.UserAgent = MMPU.UA.Ver.UA();
+            req.Timeout = outTime;
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
             //获取响应内容  
@@ -432,11 +444,27 @@ namespace Auxiliary
                             InfoLog.InfoPrintf("开始更新网络房间缓存", InfoLog.InfoClass.Debug);
                             try
                             {
-                                var wc = new WebClient();
-                                wc.Headers.Add("Accept: */*");
-                                wc.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
-                                wc.Encoding = Encoding.UTF8;
-                                string roomHtml = wc.DownloadString("https://vdb.vtbs.moe/json/list.json");//File.ReadAllText("T:/Untitled-1.json");//;
+
+                                string roomHtml = "";
+                                try
+                                {
+                                    roomHtml = 返回网页内容_GET("https://vdb.vtbs.moe/json/list.json",8000);
+                                    InfoLog.InfoPrintf("网络房间缓存vtbs加载完成", InfoLog.InfoClass.Debug);
+                                }
+                                catch (Exception e1)
+                                {
+                                    try
+                                    {
+                                        InfoLog.InfoPrintf("网络房间缓存vtbs加载失败", InfoLog.InfoClass.Debug);
+                                        roomHtml = 返回网页内容_GET("https://raw.githubusercontent.com/CHKZL/DDTV2/master/Auxiliary/DDcenter/list.json", 12000);
+                                        InfoLog.InfoPrintf("网络房间缓存github加载完成", InfoLog.InfoClass.Debug);
+                                    }
+                                    catch (Exception e2)
+                                    {
+                                        InfoLog.InfoPrintf("网络房间缓存github加载失败", InfoLog.InfoClass.Debug);
+                                        roomHtml = File.ReadAllText("AddList.json");
+                                    }
+                                }
                                 var result = JObject.Parse(roomHtml);
                                 InfoLog.InfoPrintf("网络房间缓存下载完成，开始预处理", InfoLog.InfoClass.Debug);
                                 foreach (var item in result["vtbs"])
@@ -859,9 +887,8 @@ namespace Auxiliary
             {
                 string 回复内容 = "";
                 Socket tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPAddress ipaddress = IPAddress.Parse("39.98.207.17");
-                //IPAddress ipaddress = IPAddress.Parse("127.0.0.1");
-                EndPoint point = new IPEndPoint(ipaddress, 11433);
+                IPAddress ipaddress = IPAddress.Parse(Server.IP_ADDRESS);
+                EndPoint point = new IPEndPoint(ipaddress, Server.PORT);
                 tcpClient.Connect(point);//通过IP和端口号来定位一个所要连接的服务器端
                 tcpClient.Send(Encoding.UTF8.GetBytes(JSON发送拼接(code, msg)));
                 if (是否需要回复)
