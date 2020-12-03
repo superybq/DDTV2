@@ -928,7 +928,7 @@ namespace Auxiliary
             string roomHtml;
             try
             {
-                roomHtml = MMPU.使用WC获取网络内容("https://api.vtbs.moe/v1/room/" + roomId);
+                roomHtml = MMPU.使用WC获取网络内容($"{VTBS.API.VTBS服务器CDN.VTBS_Url}/v1/room/{roomId}");
             }
             catch (Exception e)
             {
