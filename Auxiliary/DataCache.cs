@@ -28,8 +28,7 @@ namespace Auxiliary
         {
             data = null;
             try
-            {
-               
+            {             
                 if (DataCache.缓存创建时间.TryGetValue(key, out DateTime Cache))
                 {
                     TimeSpan TS = DateTime.Now - Cache;
@@ -42,6 +41,7 @@ namespace Auxiliary
                     else
                     {
                         InfoLog.InfoPrintf("命中缓存，但数据已过期，返回false:" + key, InfoLog.InfoClass.Debug);
+                        return false;
                     }
                 }
                 return false;
@@ -58,7 +58,7 @@ namespace Auxiliary
         /// <param name="key">写入的键名</param>
         /// <param name="value">写入的值</param>
         /// <param name="TS"></param>
-        public static void 写缓存(string key,string value)
+        public static void 写缓存(string key,string value="")
         {
             try
             {
@@ -70,12 +70,12 @@ namespace Auxiliary
                     缓存创建时间[key]= DateTime.Now;
                 else
                     缓存创建时间.Add(key, DateTime.Now);     
-                InfoLog.InfoPrintf("缓存未命中,缓存数据:" + key + "|" + value, InfoLog.InfoClass.Debug);
+                //InfoLog.InfoPrintf("缓存未命中,缓存数据:" + key + "|" + value, InfoLog.InfoClass.Debug);
                 DataCache.CacheCount++;
             }
             catch (Exception ex)
             {
-                InfoLog.InfoPrintf($"写缓存异常:{ex}", InfoLog.InfoClass.Debug);
+                InfoLog.InfoPrintf($"写缓存异常:{ex.ToString()}", InfoLog.InfoClass.Debug);
             }
         }  
     }
