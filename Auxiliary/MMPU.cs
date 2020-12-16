@@ -30,8 +30,8 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.4.5c";
-        public static string[] 不检测的版本号 = { "2.0.4.5b" };
+        public static string 版本号 = "2.0.4.6β-1";
+        public static string[] 不检测的版本号 = { "2.0.4.5c" };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -74,6 +74,7 @@ namespace Auxiliary
         public static int wss连接错误的次数 = 0;
         public static bool 已经提示wss连接错误 = false;
         public static bool Debug模式 = false;
+        public static bool 强制WSS连接模式 = false;
 
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
 
@@ -462,11 +463,39 @@ namespace Auxiliary
             req.Timeout = outTime;
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
+            bool 完成 = false;
             //获取响应内容  
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            new Task(() =>
             {
-                result = reader.ReadToEnd();
+                try
+                {
+                    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        result = reader.ReadToEnd();
+                        完成 = true;
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }).Start();
+            new Task(() =>
+            {
+                try
+                {
+                    Thread.Sleep(5000);
+                    完成 = true;
+
+                }
+                catch (Exception)
+                {
+                }
+            }).Start();
+            while (!完成)
+            {
+                Thread.Sleep(50);
             }
+
             return result;
         }
         public static CookieContainer 转化GET_cookie(string cookie)
@@ -725,7 +754,7 @@ namespace Auxiliary
                 spwatch.Stop();
                 return spwatch.Elapsed.TotalMilliseconds;
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
                 return -1;
