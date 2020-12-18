@@ -4,10 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon>DDTV.ico</ApplicationIcon>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BiliAccount" Version="2.5.1.23" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0-preview.3.20214.6" />
   </ItemGroup>
 
@@ -20,5 +22,7 @@
     <Folder Include="LOG\" />
     <Folder Include="tmp\" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties properties_4launchsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

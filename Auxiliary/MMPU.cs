@@ -30,8 +30,8 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.4.6β-1";
-        public static string[] 不检测的版本号 = { "2.0.4.5c" };
+        public static string 版本号 = "2.0.4.6a";
+        public static string[] 不检测的版本号 = {};
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -69,6 +69,7 @@ namespace Auxiliary
         public static bool 是否第一次使用DDTV = true;
         public static bool 是否有新版本 = false;
         public static string webServer默认监听IP = "0.0.0.0";
+        public static string webServer默认监听端口 = "11419";
         public static string 缓存路径 = "./tmp/";
         public static int 弹幕录制种类 = 2;
         public static int wss连接错误的次数 = 0;
@@ -147,18 +148,25 @@ namespace Auxiliary
             }
             else if (模式 == 1)
             {
-                MMPU.webServer默认监听IP = MMPU.读取exe默认配置文件("LiveRecWebServerDefaultIP", "0.0.0.0");                
+                MMPU.webServer默认监听IP = MMPU.读取exe默认配置文件("LiveRecWebServerDefaultIP", "0.0.0.0");
+                MMPU.webServer默认监听端口 = MMPU.读取exe默认配置文件("Port", "11419");
             }
             //是否启动WS连接组
-            bilibili.是否启动WS连接组 = MMPU.读取exe默认配置文件("NotVTBStatus", "0") == "0" ? false : true;
+            bilibili.是否启动WSS连接组 = MMPU.读取exe默认配置文件("NotVTBStatus", "0") == "0" ? false : true;
             //转码功能使能
             MMPU.转码功能使能 = MMPU.读取exe默认配置文件("AutoTranscoding", "0") == "1" ? true : false;
             //检查配置文件
             bilibili.BiliUser.CheckPath(MMPU.BiliUserFile);
             //检查弹幕录制配置
             MMPU.录制弹幕 = MMPU.读取exe默认配置文件("RecordDanmu", "0") == "1" ? true : false;
+            if (MMPU.读取exe默认配置文件("DT1", "0") == "0" ? true : false)
+            {
+                MMPU.录制弹幕 = false;
+                MMPU.setFiles("DT1", "1");
+            }
+
             //房间配置文件
-            RoomInit.RoomConfigFile = MMPU.读取exe默认配置文件("RoomConfiguration", "./RoomListConfig.json");
+                RoomInit.RoomConfigFile = MMPU.读取exe默认配置文件("RoomConfiguration", "./RoomListConfig.json");
             //房间配置文件
             MMPU.下载储存目录 = MMPU.读取exe默认配置文件("file", "./tmp/");
             //直播表刷新默认间隔
