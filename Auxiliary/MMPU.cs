@@ -23,6 +23,13 @@ namespace Auxiliary
 { 
     public class MMPU
     {
+        public static bool 开发模式 = true;
+        public static string[] 开发更改 = new string[] 
+        {
+        "修复因为阿B接口连接超时获取标题失败导致的文件名为空的错误",
+        "增加配置文件初始化时房间配置文件错误的提示",
+        "增加开发模式和相关功能"
+        };
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
         public static bool 弹幕显示使能=false;
@@ -30,9 +37,9 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        //"内部功能评测版GD-1001(2.0.4.6a分支)";
-        public static string 版本号 = "内部功能评测版GD-1002(2.0.4.6c分支)";
-        public static string[] 不检测的版本号 = {"2.0.4.6c"};
+        public static string 版本号 = "2.0.4.7a";
+        public static string 开发版本号 = $"开发模式(基于{版本号}主分支)";     
+        public static string[] 不检测的版本号 = { "2.0.4.7a" };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -75,14 +82,14 @@ namespace Auxiliary
         public static int 弹幕录制种类 = 2;
         public static int wss连接错误的次数 = 0;
         public static bool 已经提示wss连接错误 = false;
-        public static bool Debug模式 = false;
-        public static bool Debug输出到文件 = false;
-        public static bool Debug打印到终端 = false;
+        public static bool Debug模式 = 开发模式 ? true : false;
+        public static bool Debug输出到文件 = 开发模式 ? true : false;
+        public static bool Debug打印到终端 = 开发模式 ? true : false;
         public static bool 强制WSS连接模式 = false;
         public static int 心跳打印间隔 = 180;
 
         public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
-        public static bool 网络环境变动监听 = true;//0：DDTV,1：DDTVLive
+        public static bool 网络环境变动监听 = false;
 
         /// <summary>
         /// 配置文件初始化
@@ -95,7 +102,7 @@ namespace Auxiliary
             Debug输出到文件 = 读取exe默认配置文件("DebugFile", "1") == "0" ? false : true;
             Debug打印到终端 = 读取exe默认配置文件("DebugCmd", "0") == "0" ? false : true;
             心跳打印间隔 = int.Parse(读取exe默认配置文件("DokiDoki", "180"));
-            网络环境变动监听 = 读取exe默认配置文件("NetStatusMonitor", "1") == "0" ? false : true;
+            网络环境变动监听 = 读取exe默认配置文件("NetStatusMonitor", "0") == "0" ? false : true;
             if (模式 == 0)
             {
                 InfoLog.InfoInit("./DDTVLog.out", new InfoLog.InfoClasslBool()
@@ -198,7 +205,14 @@ namespace Auxiliary
                 DDcenter.DdcClient.Connect();
             }
             VTBS.API.VTBS服务器CDN.根据CDN更新VTBS_Url();
-            RoomInit.start();
+            try
+            {
+                RoomInit.start();
+            }
+            catch (Exception e)
+            {
+                InfoLog.InfoPrintf($"房间配置文件加载过程中发生错误，文件格式不符合要求，请检查文件内容。错误堆栈:\n{e.ToString()}", InfoLog.InfoClass.系统错误信息);
+            }
             DokiDoki(模式);
             Downloader.轮询检查下载任务();
             return true;
@@ -250,6 +264,7 @@ namespace Auxiliary
                                         {
                                             if (item.DownIofo.下载状态)
                                             {
+                                                item.DownIofo.下载状态 = false;
                                                 item.DownIofo.WC.CancelAsync();
                                                 new Task(() =>
                                                 {
@@ -1045,8 +1060,8 @@ namespace Auxiliary
         /// <returns></returns>    
         public static DateTime Unix转换为DateTime(string timeStamp)
         {
-            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-            long lTime = long.Parse(timeStamp + "0000000");
+            DateTime dtStart = TimeZone.CurrentTimeZone.ToUniversalTime(new DateTime(1970, 1, 1));
+            long lTime = long.Parse(timeStamp + "0000000")+(288000000000);
             TimeSpan toNow = new TimeSpan(lTime);
             return dtStart.Add(toNow);
         }

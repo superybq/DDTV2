@@ -78,7 +78,7 @@ namespace DDTV_New.window
                             }
                         }
                     }
-                    JObject JO = JObject.Parse(MMPU.使用WC获取网络内容("https://api.bilibili.com/x/player/playurl?bvid=" + BVID + "&cid=" + cid + "&otype=json"));
+                    JObject JO = JObject.Parse(MMPU.使用WC获取网络内容("https://api.bilibili.com/x/player/playurl?bvid=" + BVID + "&cid=" + cid + "&type=json"));
                     if (JO["code"].ToString() == "0")
                     {
                         dlurl = JO["data"]["durl"][0]["url"].ToString();
@@ -149,7 +149,7 @@ namespace DDTV_New.window
                         item.DownIofo.WC.CancelAsync();
                         item.DownIofo.下载状态 = false;
                         item.DownIofo.备注 = "播放窗口关闭，停止下载";
-                        item.DownIofo.结束时间 = Convert.ToInt32((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
+                        item.DownIofo.结束时间 = Convert.ToInt32((DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
                         if (item.DownIofo.是否保存)
                         {
 

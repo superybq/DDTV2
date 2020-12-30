@@ -30,10 +30,34 @@ namespace Auxiliary
                 InfoLog.InfoPrintf("续录文件[" + path2 + "]文件不存在，不符合合并条件，文件合并取消", InfoLog.InfoClass.Debug);
                 return null;
             }
-            String output;
+            string output = "";
             if (是否直播结束)
             {
-                output = A.File1Url.Replace("_202", "⒂").Split('⒂')[0] + ".flv";
+                string file = A.File1Url.Replace("_202", "⒂").Split('⒂')[0];
+                if(file.Substring(file.Length-4,4)==".flv")
+                {
+                    file = file.Substring(0, file.Length - 4);
+                }
+                if(!string.IsNullOrEmpty(file))
+                {
+                    output = file + ".flv";
+                }
+                else
+                {
+                    string T1 = A.File1Url.Replace("_202", "⒂").Split('⒂')[0];
+                    if (T1.Substring(T1.Length - 4, 4) == ".flv")
+                    {
+                        T1 = T1.Substring(0, T1.Length - 4);
+                    }
+                    if (!string.IsNullOrEmpty(T1))
+                    {
+                        output = T1 + ".flv";
+                    }
+                    else
+                    {
+                        output = $"V{new Random().Next(10000,99999)}.flv";
+                    }
+                }
             }
             else
             {

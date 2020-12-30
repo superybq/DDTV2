@@ -165,25 +165,40 @@ namespace Auxiliary
                             }
 
                             InfoLog.InfoPrintf(最新的状态.名称 + "/" + 最新的状态.原名 + "直播间状态发生了变化", InfoLog.InfoClass.下载必要提示);
-                            //Console.WriteLine(最新的状态.名称);
-                            new Task(() =>
+                            bool 是否新建任务 = true;
+                            foreach (var item in MMPU.DownList)
                             {
-                                string 下载地址 = bilibili.根据房间号获取房间信息.下载地址(之前的状态.唯一码);
-                                if(string.IsNullOrEmpty(下载地址))
+                                if (item.DownIofo.房间_频道号== 最新的状态.房间号)
                                 {
-                                    InfoLog.InfoPrintf("解析下载地址失败，一般是该房间未开播或已加密", InfoLog.InfoClass.下载必要提示);
-                                    return;
-                                }
-                                Downloader DLL =  Downloader.新建下载对象(之前的状态.平台, 之前的状态.唯一码, bilibili.根据房间号获取房间信息.获取标题(之前的状态.唯一码), Guid.NewGuid().ToString(), 下载地址, "自动录制", true, 最新的状态.名称, false, null);
-                                if(DLL!=null)
-                                {
-                                    if (string.IsNullOrEmpty(DLL.DownIofo.备注))
+                                    if(item.DownIofo.下载状态 == true && item.DownIofo.是否保存)
                                     {
-                                        DLL.DownIofo.备注 = "新建自动录制任务..等待数据..";
+                                        是否新建任务 = false;
+                                        break;
                                     }
                                 }
-                             
-                            }).Start();
+                            }
+                            //Console.WriteLine(最新的状态.名称);
+                            if (是否新建任务)
+                            {
+                                new Task(() =>
+                                {
+                                    string 下载地址 = bilibili.根据房间号获取房间信息.下载地址(之前的状态.唯一码);
+                                    if (string.IsNullOrEmpty(下载地址))
+                                    {
+                                        InfoLog.InfoPrintf("解析下载地址失败，一般是该房间未开播或已加密", InfoLog.InfoClass.下载必要提示);
+                                        return;
+                                    }
+                                    Downloader DLL = Downloader.新建下载对象(之前的状态.平台, 之前的状态.唯一码, bilibili.根据房间号获取房间信息.获取标题(之前的状态.唯一码), Guid.NewGuid().ToString(), 下载地址, "自动录制", true, 最新的状态.名称, false, null);
+                                    if (DLL != null)
+                                    {
+                                        if (string.IsNullOrEmpty(DLL.DownIofo.备注))
+                                        {
+                                            DLL.DownIofo.备注 = "新建自动录制任务..等待数据..";
+                                        }
+                                    }
+
+                                }).Start();
+                            }
                         }
                         break;
 
@@ -300,38 +315,6 @@ namespace Auxiliary
         /// <param name="R">是否是删除操作</param>
         public static void InitializeRoomList(int roomId, bool Rem,bool Rst)
         {
-            //if(Rst)
-            //{
-            //    首次启动 = true;
-            //    foreach (var BWSitem in biliWebSocket)
-            //    {
-            //        BWSitem.listener.Close();
-            //        BWSitem.listener.Dispose();
-            //        biliWebSocket.Remove(BWSitem);
-            //    }
-            //}
-            //if (roomId > 0)
-            //{
-            //    if(!Rem)
-            //    {
-            //        BiliWebSocket BWS = new BiliWebSocket();
-            //        BWS.WebSocket(roomId);
-            //        biliWebSocket.Add(BWS);
-            //    }
-            //    else
-            //    {
-            //        foreach (var item in biliWebSocket)
-            //        {
-            //            if(item.room_id==roomId)
-            //            {
-            //                item.listener.Close();
-            //                item.listener.Dispose();
-            //                biliWebSocket.Remove(item);
-            //                break;
-            //            }
-            //        }
-            //    }       
-            //}
             InfoLog.InfoPrintf("开始刷新本地房间列表", InfoLog.InfoClass.Debug);
             var rlc = new RoomBox();
             try
