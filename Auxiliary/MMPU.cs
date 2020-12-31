@@ -26,9 +26,7 @@ namespace Auxiliary
         public static bool 开发模式 = true;
         public static string[] 开发更改 = new string[] 
         {
-        "修复因为阿B接口连接超时获取标题失败导致的文件名为空的错误",
-        "增加配置文件初始化时房间配置文件错误的提示",
-        "增加开发模式和相关功能"
+        "当前和主线保持一致",
         };
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
@@ -37,7 +35,7 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.4.7a";
+        public static string 版本号 = "2.0.4.7b";
         public static string 开发版本号 = $"开发模式(基于{版本号}主分支)";     
         public static string[] 不检测的版本号 = { "2.0.4.7a" };
         public static bool 第一次打开播放窗口 = true;
@@ -83,7 +81,7 @@ namespace Auxiliary
         public static int wss连接错误的次数 = 0;
         public static bool 已经提示wss连接错误 = false;
         public static bool Debug模式 = 开发模式 ? true : false;
-        public static bool Debug输出到文件 = 开发模式 ? true : false;
+        public static bool Debug输出到文件 = true;
         public static bool Debug打印到终端 = 开发模式 ? true : false;
         public static bool 强制WSS连接模式 = false;
         public static int 心跳打印间隔 = 180;
