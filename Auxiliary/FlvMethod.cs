@@ -18,6 +18,7 @@ namespace Auxiliary
         }
         public static string FlvSum(Flv A,bool 是否直播结束)
         {
+            List<string> DelFileList = new List<string>();
             String path1 = A.File1Url;
             String path2 = A.File2Url;
             if(!File.Exists(path1))
@@ -40,7 +41,7 @@ namespace Auxiliary
                 }
                 if(!string.IsNullOrEmpty(file))
                 {
-                    output = file + ".flv";
+                    output = file + $"_{DateTime.Now.ToString("yyyyMMddHHmmssfff")}合并.flv";
                 }
                 else
                 {
@@ -51,11 +52,11 @@ namespace Auxiliary
                     }
                     if (!string.IsNullOrEmpty(T1))
                     {
-                        output = T1 + ".flv";
+                        output = T1 + $"_{DateTime.Now.ToString("yyyyMMddHHmmssfff")}合并.flv";
                     }
                     else
                     {
-                        output = $"V{new Random().Next(10000,99999)}.flv";
+                        output = $"_{new Random().Next(10000,99999)}合并.flv";
                     }
                 }
             }
@@ -90,18 +91,6 @@ namespace Auxiliary
                     fs2.Dispose();
                     fsMerge.Close();
                     fsMerge.Dispose();
-                    try
-                    {
-                        if(File.Exists(output))
-                        {
-                            File.Delete(path1);
-                            File.Delete(path2);
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-                    }
                     if (是否直播结束)
                     {
                         try
@@ -123,7 +112,7 @@ namespace Auxiliary
                     InfoLog.InfoPrintf("2该视频不适合合并，放弃合并", InfoLog.InfoClass.下载必要提示);
                     return null;
                 }
-                
+               
             }
         }
         /// <summary>

@@ -37,6 +37,7 @@ namespace PlayW
         public bool 字幕使能 = false;
         public bool 窗口是否打开 = false;
         public int 刷新次数 = 0;
+        private bool 是否已经连接弹幕 = false;
         LiveChatListener listener = new LiveChatListener();
    
 
@@ -273,15 +274,7 @@ namespace PlayW
             }));
             new Task((() => 
             {
-                try
-                {
-                    listener.Connect(int.Parse(DD.DownIofo.房间_频道号));
-                    listener.MessageReceived += Listener_MessageReceived;
-                }
-                catch (Exception)
-                {
-
-                }
+              
                 //MMPU.DownList.Add(DD);
                 if (DD.DownIofo.是否是播放任务)
                 {
@@ -462,7 +455,7 @@ namespace PlayW
                                 DD.DownIofo.下载状态 = false;
                                 DD.DownIofo.结束时间 = Convert.ToInt32((DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
                                 Downloader 下载对象 = Downloader.新建下载对象(DD.DownIofo.平台, DD.DownIofo.房间_频道号, bilibili.根据房间号获取房间信息.获取标题(DD.DownIofo.房间_频道号), Guid.NewGuid().ToString(), bilibili.根据房间号获取房间信息.下载地址(DD.DownIofo.房间_频道号), "播放缓冲重连", false, DD.DownIofo.主播名称, false, null);
-                                MMPU.文件删除委托(DD.DownIofo.文件保存路径);
+                                MMPU.文件删除委托(DD.DownIofo.文件保存路径, "刷新播放窗口，删除LiveCache过期的缓存文件");
                                 DD = 下载对象;
                                 for (int i = 0; i < MMPU.播放缓冲时长; i++)
                                 {
@@ -733,6 +726,18 @@ namespace PlayW
                 DD.DownIofo.播放状态 = false;
                 DD.DownIofo.备注 = "播放窗口关闭";
                 DD.DownIofo.结束时间 = Convert.ToInt32((DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
+                if (是否已经连接弹幕)
+                {
+                    try
+                    {
+                        listener.Dispose();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    是否已经连接弹幕 = false;
+                }
             }
             catch (Exception C)
             {
@@ -808,11 +813,39 @@ namespace PlayW
             {
                 字幕使能 = true;
                 字幕框.Visibility = Visibility.Visible;
+                if (!是否已经连接弹幕)
+                {
+                    try
+                    {
+                        new Task(() => {
+                            listener.Connect(int.Parse(DD.DownIofo.房间_频道号));
+                            listener.MessageReceived += Listener_MessageReceived;
+                        }).Start();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    是否已经连接弹幕 = true;
+                }
             }
             else
             {
                 字幕框.Visibility = Visibility.Collapsed;
                 字幕使能 = false;
+                if (!弹幕使能 && !字幕使能)
+                {
+                    try
+                    {
+                        listener.Dispose();
+                        listener = new LiveChatListener();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    是否已经连接弹幕 = false;
+                }
             }
         }
 
@@ -822,11 +855,39 @@ namespace PlayW
             {
                 弹幕使能 = true;
                 弹幕框.Visibility = Visibility.Visible;
+                if(!是否已经连接弹幕)
+                {
+                    try
+                    {
+                        new Task(()=> {
+                            listener.Connect(int.Parse(DD.DownIofo.房间_频道号));
+                            listener.MessageReceived += Listener_MessageReceived;
+                        }).Start();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    是否已经连接弹幕 = true;
+                }
             }
             else
             {
                 弹幕使能 = false;
                 弹幕框.Visibility = Visibility.Collapsed;
+                if (!弹幕使能 && !字幕使能)
+                {
+                    try
+                    {
+                        listener.Dispose();
+                        listener = new LiveChatListener();
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                    是否已经连接弹幕 = false;
+                }
             }
         }
 

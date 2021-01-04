@@ -23,10 +23,10 @@ namespace Auxiliary
 { 
     public class MMPU
     {
-        public static bool 开发模式 = true;
+        public static bool 开发模式 = false;
         public static string[] 开发更改 = new string[] 
         {
-        "当前和主线保持一致",
+            ""
         };
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
@@ -35,9 +35,9 @@ namespace Auxiliary
         public static string 直播缓存目录 = "";
         public static int 直播更新时间 = 60;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.4.7b";
-        public static string 开发版本号 = $"开发模式(基于{版本号}主分支)";     
-        public static string[] 不检测的版本号 = { "2.0.4.7a" };
+        public static string 版本号 = "2.0.4.8.2021.b";
+        public static string 开发版本号 = $"开发模式(基于Ver{版本号}主分支)";     
+        public static string[] 不检测的版本号 = { "2.0.4.8.2021" };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -103,7 +103,7 @@ namespace Auxiliary
             网络环境变动监听 = 读取exe默认配置文件("NetStatusMonitor", "0") == "0" ? false : true;
             if (模式 == 0)
             {
-                InfoLog.InfoInit("./DDTVLog.out", new InfoLog.InfoClasslBool()
+                InfoLog.InfoInit("DDTVLog.out", new InfoLog.InfoClasslBool()
                 {
                     Debug = Debug模式,
                     下载必要提示 = true,
@@ -115,7 +115,7 @@ namespace Auxiliary
             }
             else if (模式 == 1)
             {
-                InfoLog.InfoInit("./DDTVLiveRecLog.out", new InfoLog.InfoClasslBool()
+                InfoLog.InfoInit("DDTVLiveRecLog.out", new InfoLog.InfoClasslBool()
                 {
                     Debug = Debug模式,
                     下载必要提示 = true,
@@ -985,7 +985,7 @@ namespace Auxiliary
                 SetProcessWorkingSetSize(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);
             }
         }
-        public static void 文件删除委托(string file)
+        public static void 文件删除委托(string file, string 任务来源)
         {
 
             new Task((() =>
@@ -1001,11 +1001,12 @@ namespace Auxiliary
                         }
                         if (!文件是否正在被使用(file))
                         {
+                            InfoLog.InfoPrintf($"收到文件删除委托任务，来自:{任务来源}，删除文件:{file}", InfoLog.InfoClass.下载必要提示);
                             File.Delete(file);
                             return;
                         }
                         i++;
-                        Thread.Sleep(100);
+                        Thread.Sleep(200);
                     }
                 }
                 catch (Exception)

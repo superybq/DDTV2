@@ -810,7 +810,7 @@ namespace DDTV_New
                     FileInfo[] files = new DirectoryInfo("./tmp/LiveCache/").GetFiles();
                     foreach (var item in files)
                     {
-                        MMPU.文件删除委托("./tmp/LiveCache/" + item.Name);
+                        MMPU.文件删除委托("./tmp/LiveCache/" + item.Name,"DDTV关闭清空LiveCache缓存文件");
                     }
                 }
                 catch (Exception) { }
@@ -973,11 +973,20 @@ namespace DDTV_New
         }
         private void 直播表双击事件(object sender, MouseButtonEventArgs e)
         {
+           
             NewThreadTask.Run(runOnLocalThread =>
             {
-                RoomInit.RoomInfo roomInfo = new RoomInfo();
+                InfoLog.InfoPrintf("用户双击直播列表事件触发", InfoLog.InfoClass.Debug);
                 System.Windows.Controls.ListView LV = (System.Windows.Controls.ListView)sender;
-
+                RoomInit.RoomInfo roomInfo = new RoomInfo();
+                try
+                {
+                    InfoLog.InfoPrintf($"用户双击直播列表：双击房间号{MMPU.获取livelist平台和唯一码.唯一码(LV.SelectedItems[0].ToString())}", InfoLog.InfoClass.Debug);
+                }
+                catch (Exception){}
+               
+                
+              
                 string 平台 = string.Empty;
                 runOnLocalThread(() =>
                 {
@@ -1209,7 +1218,7 @@ namespace DDTV_New
                                         item.DownIofo.结束时间 = Convert.ToInt32((DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalSeconds);
                                         if (!item.DownIofo.是否保存)
                                         {
-                                            MMPU.文件删除委托(p.DD.DownIofo.文件保存路径);
+                                            MMPU.文件删除委托(p.DD.DownIofo.文件保存路径,"关闭播放窗口，删除LiveCache缓存文件");
                                         }
                                         break;
                                     }
