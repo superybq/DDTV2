@@ -69,7 +69,7 @@
             <Button Content="查看下载队列" HorizontalAlignment="Left" Margin="716,49,0,0" VerticalAlignment="Top" Width="75" Click="显示下载队列按钮点击事件"/>
             <Label x:Name="动态推送1" Content="." VerticalAlignment="Center" HorizontalAlignment="Center" Height="31" Width="702" VerticalContentAlignment="Center" Foreground="Black" Margin="7,484,91,0" />
             <Label x:Name="选中内容0" Content="当前选中行信息:" VerticalAlignment="Center" HorizontalAlignment="Center" Height="25" Width="103" VerticalContentAlignment="Center" Foreground="Black" Margin="703,154,-6,336" />
-            <Label x:Name="选中内容1" Content="." VerticalAlignment="Center" HorizontalAlignment="Center" Height="60" Width="87" VerticalContentAlignment="Center" Foreground="Black" Margin="713,179,0,276" />
+            <Label x:Name="选中内容1" Content="." VerticalAlignment="Center" HorizontalAlignment="Center" Height="60" Width="87" VerticalContentAlignment="Center" Foreground="Black" Margin="713,179,0,276" MouseDoubleClick="选中内容1_OnMouseDoubleClick" />
             <Button Content="跳转到网页" HorizontalAlignment="Left" Margin="716,73,0,0" VerticalAlignment="Top" Width="75" Click="跳转到网页按钮点击事件"/>
             <Grid x:Name="首次更新" Background="#B2636363" Visibility="Collapsed">
                 <Label Content="正在初始化房间列表......" VerticalAlignment="Center" HorizontalAlignment="Center" Height="515" Width="800" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" FontSize="40" />

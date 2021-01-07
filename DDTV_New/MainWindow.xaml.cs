@@ -2093,5 +2093,17 @@ namespace DDTV_New
         {
             MessageBox.Show("修改房间配置文件请使用DDTV文件夹里的【DDTVRoomConfig.exe】房间配置修改工具进行修改\r或者直接修改[RoomListConfig.json]文件\r修改前请关闭DDTV本体");
         }
+
+        private void 选中内容1_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (string.IsNullOrEmpty(已选内容))
+            {
+                MessageBox.Show("未选择");
+                return;
+            }
+
+            Clipboard.SetDataObject(MMPU.获取livelist平台和唯一码.唯一码(已选内容));
+            MessageBox.Show("已复制到剪贴板");
+        }
     }
 }
