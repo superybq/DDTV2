@@ -2103,7 +2103,6 @@ namespace DDTV_New
             }
 
             Clipboard.SetDataObject(MMPU.获取livelist平台和唯一码.唯一码(已选内容));
-            MessageBox.Show("已复制到剪贴板");
         }
     }
 }
