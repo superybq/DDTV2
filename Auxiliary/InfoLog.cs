@@ -153,7 +153,7 @@ namespace Auxiliary
                             {
                                 Console.WriteLine("[Debug] " + DateTime.Now.ToString("MM-dd HH:mm:ss") + ": " + mess);
                             }
-                            A = "[Debug]" + DateTime.Now.ToString("MM-dd HH:mm:ss") + ": " + mess;
+                            A = "\r\n[Debug]" + DateTime.Now.ToString("MM-dd HH:mm:ss") + ": " + mess;
 
                         }
                     }
@@ -236,12 +236,13 @@ namespace Auxiliary
                     BB += $"<br/>　　　{i}.{item}";
                     i++;
                 }
-                BB += $"<br/><br/>(如以下修改内容对你现在所遇到的问题对你有所帮助，请联系我，我将把开发版本编译一个正常工作的版本发送给你)<br/>";
+                BB += $"<br/><br/>(如以上修改内容对你现在所遇到的问题对你有所帮助，请联系我，我将把开发版本编译一个正常工作的版本发送给你)<br/>";
             }
             if(MMPU.是否有新版本)
             {
                 BB += "<br/>检测到云端有新版本。如需更新，请上github或加307156949" +
                     "<a target=\"_blank\" href=\"https://qm.qq.com/cgi-bin/qm/qr?k=uwgF9uM9BvSWcHWZu460S6tVcVH1N_YP&jump_from=webapi\"><img border=\"0\" src=\"//pub.idqqimg.com/wpa/images/group.png\" alt=\"每天都是单推的一天\" title=\"每天都是单推的一天\"></a>群共享下载";
+                BB += $"<br/><br/>更新公告:{MMPU.更新公告.Replace("\r", "<br/>")}<br/><br/>";
             }
             BB += $"<br/><br/>---运行状态---<br/>下载中:{下载中}个  下载完成:{下载完成}个";
             BB += $"<br/>当前临时API监控房间数量:{bilibili.RoomList.Count - bilibili.已连接的直播间状态.Count},稳定WSS长连接监控房间数量:{bilibili.已连接的直播间状态.Count}";

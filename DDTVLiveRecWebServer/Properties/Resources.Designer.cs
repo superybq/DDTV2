@@ -59,5 +59,34 @@ namespace DDTVLiveRecWebServer.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   查找类似 &lt;!DOCTYPE html&gt;
+        ///&lt;html&gt;
+        ///
+        ///&lt;head&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;title&gt;DDTVLiveRecWeb页鉴权&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body&gt;
+        ///    &lt;form name=&quot;Authentication&quot;&gt;
+        ///        权限验证码: &lt;input type=&quot;text&quot; name=&quot;ACC&quot; /&gt;(默认为admin和ghost)
+        ///        &lt;br /&gt;
+        ///        二次验证码: &lt;input type=&quot;text&quot; name=&quot;CODE&quot; /&gt;(默认为DDTVLiveRec)
+        ///        &lt;br /&gt;
+        ///        &lt;br /&gt;
+        ///        权限验证码说明:  
+        ///        权限验证码是DDTVLiveRec.dll.config文件里的
+        ///        * 【WebAuthenticationAadminPassword】
+        ///        * 【WebAuthenticationGhostPasswrod】
+        ///        &lt;br /&gt;
+        ///        分别 [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        public static string loginHtml {
+            get {
+                return ResourceManager.GetString("loginHtml", resourceCulture);
+            }
+        }
     }
 }

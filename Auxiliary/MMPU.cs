@@ -18,26 +18,27 @@ using Newtonsoft.Json.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using static Auxiliary.bilibili;
+using System.Drawing;
 
 namespace Auxiliary
 { 
     public class MMPU
     {
-        public static bool 开发模式 = false;
+        public static bool 开发模式 = 读取exe默认配置文件("DevelopmentModel", "0") == "1" ? true : false;
         public static string[] 开发更改 = new string[] 
-        {
-            ""
+        { 
+            "当前没有更新内容"
         };
         public static 弹窗提示 弹窗 = new 弹窗提示();
         public static List<Downloader> DownList = new List<Downloader>();
         public static bool 弹幕显示使能=false;
         public static bool 字幕显示使能 = false;
         public static string 直播缓存目录 = "";
-        public static int 直播更新时间 = 60;
+        public static int 直播更新时间 = 20;
         public static string 下载储存目录 = "";
-        public static string 版本号 = "2.0.4.8.2021.b";
+        public static string 版本号 = "2.0.5.0d";
         public static string 开发版本号 = $"开发模式(基于Ver{版本号}主分支)";     
-        public static string[] 不检测的版本号 = { "2.0.4.8.2021" };
+        public static string[] 不检测的版本号 = { };
         public static bool 第一次打开播放窗口 = true;
         public static int 默认音量 = 0;
         public static int 缩小功能 = 1;
@@ -74,6 +75,7 @@ namespace Auxiliary
         public static int 数据源 = 0;//0：vdb   1：B API
         public static bool 是否第一次使用DDTV = true;
         public static bool 是否有新版本 = false;
+        public static string 更新公告 = "";
         public static string webServer默认监听IP = "0.0.0.0";
         public static string webServer默认监听端口 = "11419";
         public static string 缓存路径 = "./tmp/";
@@ -85,9 +87,13 @@ namespace Auxiliary
         public static bool Debug打印到终端 = 开发模式 ? true : false;
         public static bool 强制WSS连接模式 = false;
         public static int 心跳打印间隔 = 180;
+        public static string webadmin验证字符串 = "";
+        public static string webghost验证字符串 = "";
 
-        public static int 启动模式 = 0;//0：DDTV,1：DDTVLive
+        public static int 启动模式 = 0;//0：DDTV,1：DDTVLive,2：DDTV服务器
         public static bool 网络环境变动监听 = false;
+
+        public static List<string> DeleteFileList = new List<string>();
 
         /// <summary>
         /// 配置文件初始化
@@ -99,8 +105,8 @@ namespace Auxiliary
             Debug模式 = 读取exe默认配置文件("DebugMod", "1") == "0" ? false : true;
             Debug输出到文件 = 读取exe默认配置文件("DebugFile", "1") == "0" ? false : true;
             Debug打印到终端 = 读取exe默认配置文件("DebugCmd", "0") == "0" ? false : true;
-            心跳打印间隔 = int.Parse(读取exe默认配置文件("DokiDoki", "180"));
-            网络环境变动监听 = 读取exe默认配置文件("NetStatusMonitor", "0") == "0" ? false : true;
+            
+          
             if (模式 == 0)
             {
                 InfoLog.InfoInit("DDTVLog.out", new InfoLog.InfoClasslBool()
@@ -126,71 +132,113 @@ namespace Auxiliary
                 启动模式 = 1;
             }
             InfoLog.InfoPrintf("消息系统初始化完成", InfoLog.InfoClass.Debug);
+            InfoLog.InfoPrintf($"配置文件初始化任务[Debug模式]:{Debug模式}", InfoLog.InfoClass.Debug);
+            InfoLog.InfoPrintf($"配置文件初始化任务[Debug输出到文件]:{Debug输出到文件}", InfoLog.InfoClass.Debug);
+            InfoLog.InfoPrintf($"配置文件初始化任务[Debug打印到终端]:{Debug打印到终端}", InfoLog.InfoClass.Debug);
+            心跳打印间隔 = int.Parse(读取exe默认配置文件("DokiDoki", "180"));
+            InfoLog.InfoPrintf($"配置文件初始化任务[心跳打印间隔]:{心跳打印间隔}", InfoLog.InfoClass.Debug);
+            网络环境变动监听 = 读取exe默认配置文件("NetStatusMonitor", "0") == "0" ? false : true;
+            InfoLog.InfoPrintf($"配置文件初始化任务[网络环境变动监听]:{网络环境变动监听}", InfoLog.InfoClass.Debug);
+
             #region 配置文件设置
             if (模式 == 0)
             {
                 //默认音量
                 MMPU.默认音量 = int.Parse(MMPU.读取exe默认配置文件("DefaultVolume", "50"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[默认音量]:{默认音量}", InfoLog.InfoClass.Debug);
                 //缩小功能
                 MMPU.缩小功能 = int.Parse(MMPU.读取exe默认配置文件("Zoom", "1"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[缩小功能]:{缩小功能}", InfoLog.InfoClass.Debug);
                 //最大直播并行数量
                 MMPU.最大直播并行数量 = int.Parse(MMPU.读取exe默认配置文件("PlayNum", "5"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[最大直播并行数量]:{最大直播并行数量}", InfoLog.InfoClass.Debug);
                 //默认弹幕颜色
                 MMPU.默认弹幕颜色 = MMPU.读取exe默认配置文件("DanMuColor", "0xFF,0x00,0x00,0x00");
+                InfoLog.InfoPrintf($"配置文件初始化任务[默认弹幕颜色]:{默认弹幕颜色}", InfoLog.InfoClass.Debug);
                 //默认字幕颜色
                 MMPU.默认字幕颜色 = MMPU.读取exe默认配置文件("ZiMuColor", "0xFF,0x00,0x00,0x00");
+                InfoLog.InfoPrintf($"配置文件初始化任务[默认字幕颜色]:{默认字幕颜色}", InfoLog.InfoClass.Debug);
                 //默认字幕大小
                 MMPU.默认字幕大小 = int.Parse(MMPU.读取exe默认配置文件("ZiMuSize", "24"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[默认字幕大小]:{默认字幕大小}", InfoLog.InfoClass.Debug);
                 //默认弹幕大小
                 MMPU.默认弹幕大小 = int.Parse(MMPU.读取exe默认配置文件("DanMuSize", "20"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[默认弹幕大小]:{默认弹幕大小}", InfoLog.InfoClass.Debug);
                 //默认弹幕大小
                 MMPU.播放缓冲时长 = int.Parse(MMPU.读取exe默认配置文件("BufferDuration", "3"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[播放缓冲时长]:{播放缓冲时长}", InfoLog.InfoClass.Debug);
                 //直播缓存目录
                 MMPU.直播缓存目录 = MMPU.读取exe默认配置文件("Livefile", "./tmp/LiveCache/");
+                InfoLog.InfoPrintf($"配置文件初始化任务[直播缓存目录]:{直播缓存目录}", InfoLog.InfoClass.Debug);
                 //播放窗口默认高度
                 MMPU.播放器默认高度 = int.Parse(MMPU.读取exe默认配置文件("PlayWindowH", "450"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[播放器默认高度]:{播放器默认高度}", InfoLog.InfoClass.Debug);
                 //播放窗口默认宽度
                 MMPU.播放器默认宽度 = int.Parse(MMPU.读取exe默认配置文件("PlayWindowW", "800"));
+                InfoLog.InfoPrintf($"配置文件初始化任务[播放器默认宽度]:{播放器默认宽度}", InfoLog.InfoClass.Debug);
                 //剪切板监听
                 MMPU.剪贴板监听 = MMPU.读取exe默认配置文件("ClipboardMonitoring", "0") == "0" ? false : true;
-                //数据源
-                MMPU.数据源 = int.Parse(MMPU.读取exe默认配置文件("DataSource", "0"));                 
+                InfoLog.InfoPrintf($"配置文件初始化任务[剪贴板监听]:{剪贴板监听}", InfoLog.InfoClass.Debug);
                 //第一次使用DDTV
                 MMPU.是否第一次使用DDTV = MMPU.读取exe默认配置文件("IsFirstTimeUsing", "1") == "0" ? false :true;
-                //第一次使用DDTV
+                InfoLog.InfoPrintf($"配置文件初始化任务[是否第一次使用DDTV]:{是否第一次使用DDTV}", InfoLog.InfoClass.Debug);
                 MMPU.开机自启动 = MMPU.读取exe默认配置文件("BootUp", "0") == "0" ? false : true;
+                InfoLog.InfoPrintf($"配置文件初始化任务[开机自启动]:{开机自启动}", InfoLog.InfoClass.Debug);
+                清空播放缓存();
             }
             else if (模式 == 1)
             {
                 MMPU.webServer默认监听IP = MMPU.读取exe默认配置文件("LiveRecWebServerDefaultIP", "0.0.0.0");
+                InfoLog.InfoPrintf($"配置文件初始化任务[webServer默认监听IP]:{webServer默认监听IP}", InfoLog.InfoClass.Debug);
                 MMPU.webServer默认监听端口 = MMPU.读取exe默认配置文件("Port", "11419");
+                InfoLog.InfoPrintf($"配置文件初始化任务[webServer默认监听端口]:{webServer默认监听端口}", InfoLog.InfoClass.Debug);
+                MMPU.webadmin验证字符串 = MMPU.读取exe默认配置文件("WebAuthenticationAadminPassword", "admin");
+                MMPU.webghost验证字符串 = MMPU.读取exe默认配置文件("WebAuthenticationGhostPasswrod", "ghost");
+                MMPU.webghost验证字符串 = MMPU.读取exe默认配置文件("WebAuthenticationCode", "DDTVLiveRec");
             }
+            //数据源
+            MMPU.数据源 = int.Parse(MMPU.读取exe默认配置文件("DataSource", "0"));
+            InfoLog.InfoPrintf($"配置文件初始化任务[数据源]:{数据源}", InfoLog.InfoClass.Debug);
             //是否启动WS连接组
             bilibili.是否启动WSS连接组 = MMPU.读取exe默认配置文件("NotVTBStatus", "0") == "0" ? false : true;
+            InfoLog.InfoPrintf($"配置文件初始化任务[是否启动WSS连接组]:{是否启动WSS连接组}", InfoLog.InfoClass.Debug);
             //转码功能使能
             MMPU.转码功能使能 = MMPU.读取exe默认配置文件("AutoTranscoding", "0") == "1" ? true : false;
+            InfoLog.InfoPrintf($"配置文件初始化任务[转码功能使能]:{转码功能使能}", InfoLog.InfoClass.Debug);
             //检查配置文件
             bilibili.BiliUser.CheckPath(MMPU.BiliUserFile);
             //检查弹幕录制配置
             MMPU.录制弹幕 = MMPU.读取exe默认配置文件("RecordDanmu", "0") == "1" ? true : false;
+            InfoLog.InfoPrintf($"配置文件初始化任务[录制弹幕]:{录制弹幕}", InfoLog.InfoClass.Debug);
+            //房间配置文件
+            RoomInit.RoomConfigFile = MMPU.读取exe默认配置文件("RoomConfiguration", "./RoomListConfig.json");
+            InfoLog.InfoPrintf($"配置文件初始化任务[RoomConfigFile]:{RoomInit.RoomConfigFile}", InfoLog.InfoClass.Debug);
+            //房间配置文件
+            MMPU.下载储存目录 = MMPU.读取exe默认配置文件("file", "./tmp/");
+            if(Directory.Exists("./tmp"))
+            {
+                Directory.CreateDirectory("./tmp");
+            }
+            InfoLog.InfoPrintf($"配置文件初始化任务[下载储存目录]:{下载储存目录}", InfoLog.InfoClass.Debug);
+            //直播表刷新默认间隔
+            MMPU.直播列表刷新间隔 = int.Parse(MMPU.读取exe默认配置文件("LiveListTime", "5"));
+            InfoLog.InfoPrintf($"配置文件初始化任务[直播列表刷新间隔]:{直播列表刷新间隔}", InfoLog.InfoClass.Debug);
+
+
+            //直播更新时间
+            MMPU.直播更新时间 = int.Parse(MMPU.读取exe默认配置文件("RoomTime", "20"));
+            InfoLog.InfoPrintf($"配置文件初始化任务[直播更新时间]:{直播更新时间}", InfoLog.InfoClass.Debug);
             if (MMPU.读取exe默认配置文件("DT1", "0") == "0" ? true : false)
             {
                 MMPU.录制弹幕 = false;
                 MMPU.setFiles("DT1", "1");
             }
-
-            //房间配置文件
-                RoomInit.RoomConfigFile = MMPU.读取exe默认配置文件("RoomConfiguration", "./RoomListConfig.json");
-            //房间配置文件
-            MMPU.下载储存目录 = MMPU.读取exe默认配置文件("file", "./tmp/");
-            //直播表刷新默认间隔
-            MMPU.直播列表刷新间隔 = int.Parse(MMPU.读取exe默认配置文件("LiveListTime", "5"));
-
-
-            //直播更新时间
-            MMPU.直播更新时间 = int.Parse(MMPU.读取exe默认配置文件("RoomTime", "40"));
-
-           
+            if (MMPU.读取exe默认配置文件("DT2", "0") == "0" ? true : false)
+            {
+                MMPU.直播更新时间 = 20;
+                MMPU.setFiles("RoomTime", "20");
+                MMPU.setFiles("DT1", "1");
+            }
             #endregion
             InfoLog.InfoPrintf("通用配置加载完成", InfoLog.InfoClass.Debug);
 
@@ -212,8 +260,48 @@ namespace Auxiliary
                 InfoLog.InfoPrintf($"房间配置文件加载过程中发生错误，文件格式不符合要求，请检查文件内容。错误堆栈:\n{e.ToString()}", InfoLog.InfoClass.系统错误信息);
             }
             DokiDoki(模式);
+            文件删除后台委托();
             Downloader.轮询检查下载任务();
             return true;
+        }
+        public static void 文件删除后台委托()
+        {
+            new Thread(new ThreadStart(delegate
+            {
+                while (true)
+                {
+                    try
+                    {
+                       DEL: if(DeleteFileList.Count>0)
+                        {
+                            foreach (var item in DeleteFileList)
+                            {
+                                if (File.Exists(item))
+                                {
+                                    if (!文件是否正在被使用(item))
+                                    {
+                                        try
+                                        {
+                                            File.Delete(item);
+                                            InfoLog.InfoPrintf($"后台文件处理池{item}删除委托完成", InfoLog.InfoClass.Debug);
+                                            DeleteFileList.Remove(item);
+                                            goto DEL;
+                                        }
+                                        catch (Exception) { }  
+                                    }
+                                }
+                                else
+                                {
+                                    DeleteFileList.Remove(item);
+                                    goto DEL;
+                                } 
+                            }
+                        }
+                    }
+                    catch (Exception) { }
+                    Thread.Sleep(5000);
+                }
+            })).Start();
         }
         /// <summary>
         /// 心跳和检测网络环境变动
@@ -253,7 +341,7 @@ namespace Auxiliary
                         {
                             if (LIP != NIP&& IsCorrectIP(LIP)&& IsCorrectIP(NIP))
                             {
-                                InfoLog.InfoPrintf($"■■■■■■■■■■■■■■■■■■■■■■■■■■■ERROR!错误警告！■■■■■■■■■■■■■■■■■■■■■■■■■■■\n检测到系统网络中断，多个DDTV录制中的线程抛出无法处理的异常\n这个错误是由于网络环境变化引起的，不是由DDTV引起的，一般是由于光猫、路由器重启或者电信重新拨号引起的，DDTV无法处理该异常\n网络中断若干时间且外网地址由\n{LIP}变化为{NIP}，网络错误前的任务将冻结任务建立新的续命任务，恢复后新建立的任务正常录制\n■■■■■■■■■■■■■■■■■■■■■■■■■■■ERROR!错误警告！■■■■■■■■■■■■■■■■■■■■■■■■■■■", InfoLog.InfoClass.系统错误信息);
+                                InfoLog.InfoPrintf($"■■■■■■■■■■■■■■■■■■■■■■■■■■■ERROR!错误警告！■■■■■■■■■■■■■■■■■■■■■■■■■■■\n检测到系统网络中断，多个DDTV录制中的线程抛出无法处理的异常\n这个错误是由于网络环境变化引起的，不是由DDTV引起的，一般是由于光猫、路由器重启或者宽带重新拨号引起的，DDTV无法处理该异常\n网络中断若干时间且外网地址由\n{LIP}变化为{NIP}，网络错误前的任务将冻结任务建立新的续命任务，恢复后新建立的任务正常录制\n■■■■■■■■■■■■■■■■■■■■■■■■■■■ERROR!错误警告！■■■■■■■■■■■■■■■■■■■■■■■■■■■", InfoLog.InfoClass.系统错误信息);
                                 try
                                 {
                                     foreach (var item in Auxiliary.MMPU.DownList)
@@ -317,7 +405,8 @@ namespace Auxiliary
             try
             {
                 MMPU.Cookie = Encryption.UnAesStr(MMPU.读ini配置文件("User", "Cookie", MMPU.BiliUserFile), MMPU.AESKey, MMPU.AESVal);
-                if(!MMPU.Cookie.Contains("=")|| !MMPU.Cookie.Contains(";"))
+                InfoLog.InfoPrintf($"配置文件初始化任务[Cookie]敏感信息，隐藏内容，信息长度:{Cookie.Length}", InfoLog.InfoClass.Debug);
+                if (!MMPU.Cookie.Contains("=")|| !MMPU.Cookie.Contains(";"))
                 {
                     MMPU.Cookie = "";
                     MMPU.写ini配置文件("User", "Cookie", "", MMPU.BiliUserFile);
@@ -333,12 +422,14 @@ namespace Auxiliary
             }
             //账号UID
             MMPU.UID = MMPU.读ini配置文件("User", "UID", MMPU.BiliUserFile); //string.IsNullOrEmpty(MMPU.读取exe默认配置文件("UID", "")) ? null : MMPU.读取exe默认配置文件("UID", "");
+            InfoLog.InfoPrintf($"配置文件初始化任务[UID]敏感信息，隐藏内容，信息长度:{UID.Length}", InfoLog.InfoClass.Debug);
             //账号登陆cookie的有效期
             try
             {
                 if (!string.IsNullOrEmpty(MMPU.读ini配置文件("User", "CookieEX", MMPU.BiliUserFile)))
-                {
+                { 
                     MMPU.CookieEX = DateTime.Parse(MMPU.读ini配置文件("User", "CookieEX", MMPU.BiliUserFile));
+                    InfoLog.InfoPrintf($"配置文件初始化任务[CookieEX]敏感信息，隐藏内容", InfoLog.InfoClass.Debug);
                     if (DateTime.Compare(DateTime.Now, MMPU.CookieEX) > 0)
                     {
                         MMPU.Cookie = "";
@@ -399,6 +490,7 @@ namespace Auxiliary
                 }
             }
             MMPU.csrf = MMPU.读ini配置文件("User", "csrf", MMPU.BiliUserFile);
+            InfoLog.InfoPrintf($"配置文件初始化任务[csrf]敏感信息，隐藏内容，信息长度:{csrf.Length}", InfoLog.InfoClass.Debug);
         }
         public static void 修改默认音量设置(int A)
         {
@@ -556,6 +648,35 @@ namespace Auxiliary
                 result = reader.ReadToEnd();
             }
             return result;
+        }
+
+        public static string 返回网页内容_POST_JSON(string url, string jsonParam, string encode)
+        {
+            string strURL = url;
+            HttpWebRequest request;
+            request = (HttpWebRequest)WebRequest.Create(strURL);
+            request.Method = "POST";
+            request.ContentType = "application/json;charset=" + encode.ToUpper();
+            string paraUrlCoded = jsonParam;
+            byte[] payload;
+            payload = Encoding.GetEncoding(encode.ToUpper()).GetBytes(paraUrlCoded);
+            request.ContentLength = payload.Length;
+            Stream writer = request.GetRequestStream();
+            writer.Write(payload, 0, payload.Length);
+            writer.Close();
+            System.Net.HttpWebResponse response;
+            response = (System.Net.HttpWebResponse)request.GetResponse();
+            System.IO.Stream s;
+            s = response.GetResponseStream();
+            string StrDate = "";
+            string strValue = "";
+            StreamReader Reader = new StreamReader(s, Encoding.GetEncoding(encode.ToUpper()));
+            while ((StrDate = Reader.ReadLine()) != null)
+            {
+                strValue += StrDate + "\r\n";
+            }
+            return strValue;
+
         }
         public static string 返回网页内容_GET(string url,int outTime)
         {
@@ -733,13 +854,23 @@ namespace Auxiliary
                                     try
                                     {
                                         InfoLog.InfoPrintf("网络房间缓存vtbs加载失败", InfoLog.InfoClass.Debug);
-                                        roomHtml = 返回网页内容_GET("https://raw.githubusercontent.com/CHKZL/DDTV2/master/Auxiliary/DDcenter/vtbsroomlist.json", 12000);
+                                        roomHtml = 返回网页内容_GET("https://raw.githubusercontent.com/CHKZL/DDTV2/master/Auxiliary/DDcenter/VtbsList.json", 12000);
                                         InfoLog.InfoPrintf("网络房间缓存github加载完成", InfoLog.InfoClass.Debug);
                                     }
                                     catch (Exception)
-                                    {
-                                        InfoLog.InfoPrintf("网络房间缓存github加载失败", InfoLog.InfoClass.Debug);
-                                        roomHtml = File.ReadAllText("VtbsList.json");
+                                    {            
+                                        try
+                                        {
+                                            InfoLog.InfoPrintf("网络房间缓存github加载失败", InfoLog.InfoClass.Debug);
+                                            roomHtml = TcpSend(Server.RequestCode.GET_VTBSROOMLIST, "{}", true, 1500);
+                                            InfoLog.InfoPrintf("DDTV服务器加载房间缓存成功", InfoLog.InfoClass.Debug);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            InfoLog.InfoPrintf("DDTV服务器加载房间缓存失败", InfoLog.InfoClass.Debug);
+                                            roomHtml = File.ReadAllText("VtbsList.json");
+                                            InfoLog.InfoPrintf("本地文件缓存加载房间缓存成功", InfoLog.InfoClass.Debug);
+                                        }
                                     }
                                 }
                                 JArray result = JArray.Parse(roomHtml);
@@ -747,23 +878,29 @@ namespace Auxiliary
                                 列表缓存2.Clear();
                                 foreach (var item in result)
                                 {
-                                    if(int.Parse(item["roomid"].ToString())!=0)
+                                    try
                                     {
-                                        列表缓存2.Add(new 列表加载缓存
+                                        if (int.Parse(item["roomid"].ToString()) != 0)
                                         {
-                                            编号 = A,
-                                            roomId = item["roomid"].ToString(),
-                                            名称 = item["uname"].ToString(),
-                                            官方名称 = item["uname"].ToString(),
-                                            平台 = "bilibili",
-                                            UID = item["mid"].ToString(),
-                                            类型 = "V"
-                                        }) ;
-                                        A++;
+                                            列表缓存2.Add(new 列表加载缓存
+                                            {
+                                                编号 = A,
+                                                roomId = item["roomid"].ToString(),
+                                                名称 = item["uname"].ToString(),
+                                                官方名称 = item["uname"].ToString(),
+                                                平台 = "bilibili",
+                                                UID = item["mid"].ToString(),
+                                                类型 = "V"
+                                            });
+                                            A++;
+                                        }
+                                        else
+                                        {
+                                            ;
+                                        }
                                     }
-                                    else
+                                    catch (Exception)
                                     {
-                                        ;
                                     }
                                 }
                                 列表缓存1 = 列表缓存2;
@@ -811,7 +948,7 @@ namespace Auxiliary
                                 //    }
                                 //}
                             }
-                            catch (Exception)
+                            catch (Exception E)
                             {
                                 是否正在缓存 = false;
                             }
@@ -985,36 +1122,55 @@ namespace Auxiliary
                 SetProcessWorkingSetSize(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);
             }
         }
-        public static void 文件删除委托(string file, string 任务来源)
+        public static void 清空播放缓存()
         {
-
-            new Task((() =>
-            {
-                int i = 0;
+            new Thread(new ThreadStart(delegate {
                 try
                 {
-                    while (true)
+                    if (Directory.Exists("./tmp/LiveCache/"))
                     {
-                        if (i > 10)
+                        FileInfo[] files = new DirectoryInfo("./tmp/LiveCache/").GetFiles();
+                        foreach (var item in files)
                         {
-                            return;
+                            MMPU.文件删除委托("./tmp/LiveCache/" + item.Name, "启动/关闭DDTV清空LiveCache缓存文件");
                         }
-                        if (!文件是否正在被使用(file))
-                        {
-                            InfoLog.InfoPrintf($"收到文件删除委托任务，来自:{任务来源}，删除文件:{file}", InfoLog.InfoClass.下载必要提示);
-                            File.Delete(file);
-                            return;
-                        }
-                        i++;
-                        Thread.Sleep(200);
+                    }
+                }
+                catch (Exception) { }
+            })).Start();
+        }
+        public static void 文件删除委托(string file, string 任务来源)
+        {
+            new Task((() =>
+            {
+                try
+                {
+                    if (!文件是否正在被使用(file))
+                    {
+                        InfoLog.InfoPrintf($"收到文件删除委托任务，来自:{任务来源}，删除文件:{file}", InfoLog.InfoClass.Debug);
+                        File.Delete(file);
+                        return;
+                    }
+                    else
+                    {
+                        InfoLog.InfoPrintf($"来自:{任务来源}的文件:{file}删除委托失败，文件还在使用中，已将删除任务委托给后台文件处理池", InfoLog.InfoClass.Debug);
+                        DeleteFileList.Add(file);
                     }
                 }
                 catch (Exception)
                 {
+                    return;
                 }
             })).Start();
 
         }
+
+
+        /// <summary>
+        /// 文件是否被打开
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static bool 文件是否正在被使用(string fileName)
         {
             bool inUse = true;
@@ -1031,6 +1187,22 @@ namespace Auxiliary
             }
             return inUse;//true表示正在使用,false没有使用
         }
+        //public static bool 文件是否正在被使用(string fileName)
+        //{
+        //    bool inUse = true;
+        //    try
+        //    {
+        //        FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read,
+        //        FileShare.None);
+        //        fs.Close();
+        //        inUse = false;
+        //    }
+        //    catch
+        //    {
+
+        //    }
+        //    return inUse;//true表示正在使用,false没有使用
+        //}
         /// <summary>
         /// 获得13位的时间戳
         /// </summary>
@@ -1067,11 +1239,12 @@ namespace Auxiliary
         public static void 储存文本(string data, string CurDir)
         {
             //如果启动方式为LiveRec则直接退出，不更新配置文件
-            if(MMPU.启动模式==1)
+            if (MMPU.启动模式 == 1)
             {
                 return;
             }
             //文件覆盖方式添加内容
+            InfoLog.InfoPrintf($"文件变化:{CurDir}文件收到储存请求，文件更新，更新文件信息长度:{data.Length}", InfoLog.InfoClass.Debug);
             System.IO.StreamWriter file = new System.IO.StreamWriter(CurDir, false);
             //保存数据到文件
             file.Write(data);
@@ -1256,7 +1429,7 @@ namespace Auxiliary
             return "{\"code\":\"" + code + "\",\"msg\":\"" + msg.Replace("\"", "\\\"") + "\"}";
         }
         /// <summary>
-        /// 指定Post地址和添加cookis使用Get 方式获取网页返回内容  
+        /// 指定Post地址和添加cookis使用Post方式获取网页返回内容  
         /// </summary>  
         /// <param name="url">请求后台地址</param>  
         /// <param name="dic">Post表参数</param>
@@ -1327,7 +1500,29 @@ namespace Auxiliary
             else
                 return b;
         }
-
+        ///获取当前系统的dpi数值
+        public static void SystemDpi(out int x, out int y)
+        {
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                x = (int)g.DpiX;
+                y = (int)g.DpiY;
+                g.Dispose();
+            }
+        }
+        ///根据当前系统dpi数值匹配 当前系统的桌面缩放比例
+        public static double Scaling(int DpiIndex)
+        {
+            switch (DpiIndex)
+            {
+                case 96: return 1;
+                case 120: return 1.25;
+                case 144: return 1.5;
+                case 168: return 1.75;
+                case 192: return 2;
+            }
+            return 1;
+        }
         public class UA
         {
             [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -1383,17 +1578,6 @@ namespace Auxiliary
                 [DllImport("Kernel32")]
                 public static extern IntPtr GetProcAddress(IntPtr handle, string funcname);
             }
-        }
-
-        public class SQL中间件数据格式
-        {
-            public string SQL { set; get; }
-            public List<SQL数据对> code { set; get; }
-        }
-        public class SQL数据对
-        {
-            public string name { set; get; }
-            public string val { set; get; }
         }
     }
 }

@@ -10,6 +10,7 @@
 * 支持linux，可以挂在路由器或树莓派等linux嵌入式设备上运行
 * 开播自动录制
 * 录制完成后自动合并文件
+* 录制完成后自动转码为MP4并修复直播流flv时间轴错误的问题 (在Linux/MacOS上需要自行安装ffmpeg)
 * 多路异步下载
 * 在网页直接查看运行状态\日志\下载文件列表
 * 登陆买票后可以录制付费直播内容
@@ -19,8 +20,13 @@
 
 # 使用说明
     
-　　DDTVLiveRec的releases只提供依赖框架的可移植版本，请确保环境已经安装ASP.NET5的运行时(ASP.NET Core Runtime 5.0.0)  
-如未安装不能启动，请到参考[微软文档](https://docs.microsoft.com/zh-cn/dotnet/core/install/)进行运行时的安装，或者直接[下载ASP.NET5.0运行时](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-aspnetcore-5.0.0-windows-x64-installer)进行安装，然后运行DDTVLiveRec
+DDTVLiveRec的releases只提供依赖框架的可移植版本，请确保环境已经安装以下两个环境依赖
+  
+* ASP.NET5运行时(ASP.NET Core Runtime 5.0.0) 
+* .NET5运行时(.NET Runtime)
+如未安装不能启动，下列方法二选一：  
+1.请到参考[微软文档](https://docs.microsoft.com/zh-cn/dotnet/core/install/)进行环境的安装  
+2.下载[下载ASP.NET5.0运行时](https://download.visualstudio.microsoft.com/download/pr/48dd125b-b9ca-4fc7-b26c-558bff5bee13/214be31c3239444d4a9cfdf0574f3cd8/aspnetcore-runtime-5.0.1-win-x64.exe)和[下载NET5.0运行时](https://download.visualstudio.microsoft.com/download/pr/93095e51-be33-4b28-99c8-5ae0ebba753d/501f77f4b95d2e9c3481246a3eff9956/dotnet-runtime-5.0.1-win-x64.exe)2个文件进行安装，然后运行DDTVLiveRec
 
 启动准备:  
 　　1.因为DDTVLiveRec是根据DDTV2部分功能移植而来，所以需要依赖DDTV的配置文件，在使用前请先保证有一个可以正常使用的DDTV最新版本，并且已经登录。  
@@ -39,7 +45,27 @@ web服务端:
 [http://IP:11419/config]：DDTVLiveRec的配置修改命令列表  
 [http://IP:11419/systeminfo]：DDTVLiveRec的系统总览页面
 
+### 如果使用Docker构建:
 
+1. 构建Docker镜像：
+
+```bash
+docker build -f DDTVLiveRec/Dockerfile -t ddtv:latest .
+```
+
+2. 运行Docker：
+
+```bash
+docker run -d \
+    --restart always \
+    -p 11419:11419 \
+    -v ${CONFIG_DIR}/BiliUser.ini:/DDTVLiveRec/BiliUser.ini \
+    -v ${CONFIG_DIR}/DDTVLiveRec.dll.config:/DDTVLiveRec/DDTVLiveRec.dll.config \
+    -v ${CONFIG_DIR}/RoomListConfig.json:/DDTVLiveRec/RoomListConfig.json \
+    -v ${DOWNLOAD_DIR}:/DDTVLiveRec/tmp \
+    --name ddtv \
+    ddtv:latest
+```
 
 # 录制配置：RoomListConfig.json说明：
 　　格式和解析方式和DDTV一样，格式为json字符串，releases发布的压缩包里附带了一个参考的文件。  

@@ -22,6 +22,9 @@ using System.Windows.Forms;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using Auxiliary.LiveChatScript;
+using LibVLCSharp.WPF;
+using LibVLCSharp.Shared;
+using MediaPlayer = LibVLCSharp.Shared.MediaPlayer;
 
 namespace PlayW
 {
@@ -31,15 +34,17 @@ namespace PlayW
     public partial class MainWindow : Window
     {
         public Downloader DD { set; get; }
-        public bool 播放状态 = false;
-        public bilibili.danmu DM = new bilibili.danmu();
-        public bool 弹幕使能 = false;
-        public bool 字幕使能 = false;
+        private bool 播放状态 = false;
+        private bilibili.danmu DM = new bilibili.danmu();
+        private bool 弹幕使能 = false;
+        private bool 字幕使能 = false;
         public bool 窗口是否打开 = false;
-        public int 刷新次数 = 0;
+        private int 刷新次数 = 0;
         private bool 是否已经连接弹幕 = false;
         LiveChatListener listener = new LiveChatListener();
-   
+        private static LibVLC _libVLC;
+        private static MediaPlayer _mediaPlayer;
+        private SetWindow.窗口信息 窗口信息 = new SetWindow.窗口信息();
 
 
         /// <summary>
@@ -56,8 +61,25 @@ namespace PlayW
         public MainWindow(Downloader DL, int 默认音量, SolidColorBrush 弹幕颜色, SolidColorBrush 字幕颜色, int 弹幕大小, int 字幕大小, int 宽度, int 高度)
         {
             InitializeComponent();
+            Core.Initialize();
+            _libVLC = new LibVLC();
+            _mediaPlayer = new MediaPlayer(_libVLC);
+            VLCV.Loaded += (sender, e) => VLCV.MediaPlayer = _mediaPlayer;
             this.Width = 宽度;
             this.Height = 高度;
+
+            this.Title = DL.DownIofo.标题;
+            窗口信息 = new SetWindow.窗口信息()
+            {
+                GUID = Guid.NewGuid().ToString(),
+                X坐标 = this.Left,
+                Y坐标 = this.Top,
+                宽度 = this.Width,
+                高度 = this.Height,
+                标题 = this.Title
+            };
+            
+            
             窗口是否打开 = true;
             音量.Value = 默认音量;
             this.Closed += 关闭窗口事件;
@@ -72,7 +94,7 @@ namespace PlayW
             弹幕.字体大小 = 弹幕大小;
             DD.DownIofo.文件保存路径 =   "./tmp/LiveCache/" + DL.DownIofo.标题 + DL.DownIofo.事件GUID + "_" + 刷新次数 + ".flv";
             DD.DownIofo.继承 = new Downloader.继承();
-            this.Title = DL.DownIofo.标题;
+           
             设置框.Visibility = Visibility.Collapsed;
             关闭框.Visibility = Visibility.Collapsed;
             if (MMPU.第一次打开播放窗口)
@@ -105,8 +127,77 @@ namespace PlayW
             }
 
         }
+        private void 更新窗口信息()
+        {
+            try
+            {
+                窗口信息.X坐标 = this.Left;
+                窗口信息.Y坐标 = this.Top;
+                窗口信息.宽度 = this.Width;
+                窗口信息.高度 = this.Height;
+                窗口信息.标题 = this.Title;
+            }
+            catch (Exception){}
+        }
+        public SetWindow.窗口信息 获取窗口信息()
+        {
+            更新窗口信息();
+            SetWindow.窗口信息 SW = new SetWindow.窗口信息()
+            {
+                X坐标 = this.Left,
+                Y坐标 = this.Top,
+                宽度 = this.Width,
+                高度 = this.Height,
+                标题=窗口信息.标题,
+                GUID=窗口信息.GUID     
+            };
+            return SW;
+        }
+        public bool 设置窗口信息(SetWindow.窗口信息 SW)
+        {
+            try
+            {
+                if (SW.X坐标 >= 0)
+                {
+                    this.Left = SW.X坐标;
+                }
+                if (SW.Y坐标 >= 0)
+                {
+                    this.Top = SW.Y坐标;
+                }
+                if (SW.宽度 > 0)
+                {
+                    this.Width = SW.宽度;
+                }
+                if (SW.高度 > 0)
+                {
+                    this.Height = SW.高度;
+                }
+                if (!string.IsNullOrEmpty(SW.标题))
+                {
+                    this.Title = SW.标题;
+                }
 
-
+                //if (this.Height != LastHeight)
+                //{
+                //    this.Width = this.Height * 1.75;
+                //}
+                if (this.Width != LastWidth)
+                {
+                    this.Height = this.Width / 1.75;
+                }
+                LastWidth = (int)this.Width;
+                LastHeight = (int)this.Height;
+                更新窗口信息();
+                return true;
+            }
+            catch (Exception)
+            {
+                更新窗口信息();
+                return false;
+            }
+        }
+        
         private void 关闭窗口事件(object sender, EventArgs e)
         {
             播放状态 = false;
@@ -117,6 +208,29 @@ namespace PlayW
                     Play_STOP();
                     //listener.Close();
                     listener.Dispose();
+
+                    try
+                    {
+                        VLCV.MediaPlayer.Dispose();
+                    }
+                    catch (Exception) { }
+
+                    try
+                    {
+                        //不能回收这玩意，回收了最后启动的一个实例就会挂掉，奇了个怪
+                        //_mediaPlayer.Dispose();
+                    }
+                    catch (Exception) { }
+                    try
+                    {
+                        _libVLC.Dispose();
+                    }
+                    catch (Exception) { }
+                    try
+                    {
+                        VLCV.Dispose();
+                    }
+                    catch (Exception) { }
                     //this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
                 }
                 catch (Exception)
@@ -130,51 +244,71 @@ namespace PlayW
         #region 播放控件事件
         public void Play_STOP()
         {
-            //Aplayer.Close();
-            new Task((() => 
+            new Task((() =>
             {
-                try
+                this.Dispatcher.Invoke(new Action(delegate
                 {
-                    if (VlcControl.SourceProvider.MediaPlayer != null)
+                    try
                     {
-                        this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
+                        if (VLCV.MediaPlayer.IsPlaying)
+                        {
+                            VLCV.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
+                        }
                     }
-                }
-                catch (Exception)
-                {
-                }
+                    catch (Exception)
+                    {
+                    }
+                }));
             })).Start();
-
         }
         public void Play_SETVolume(int a)
         {
-            if (VlcControl.SourceProvider.MediaPlayer != null)
+            this.Dispatcher.Invoke(new Action(delegate
             {
-                this.VlcControl.SourceProvider.MediaPlayer.Audio.Volume = a;
-            }
-
-            // Aplayer.SetVolume(a);
+                if (窗口是否打开 && VLCV.MediaPlayer.IsPlaying)
+                {
+                    VLCV.MediaPlayer.Volume = a;
+                }
+            }));
         }
         public void Play_Play()
         {
-            if (VlcControl.SourceProvider.MediaPlayer != null)
+            this.Dispatcher.Invoke(new Action(delegate
             {
-                this.VlcControl.SourceProvider.MediaPlayer.Play();
-            }
-
-            //Aplayer.Play();
+                if (窗口是否打开 && VLCV.MediaPlayer.IsPlaying)
+                {
+                    VLCV.MediaPlayer.Play();
+                }
+            }));
         }
         public void Play_Open(string A)
         {
-            if (VlcControl.SourceProvider.MediaPlayer != null) 
+            this.Dispatcher.Invoke(new Action(delegate
             {
-                this.VlcControl.SourceProvider.MediaPlayer.Play(new FileInfo(A));
-            }
+                try
+                {
+                    if (窗口是否打开&&!VLCV.MediaPlayer.IsPlaying)
+                    {
+                        using (var media = new Media(_libVLC, A))
+                            do
+                            {
 
-            // Aplayer.Open(A);
+                            } while (!VLCV.MediaPlayer.Play(media));
+                        do
+                        {
+                            Play_SETVolume((int)音量.Value);
+                        } while (!VLCV.MediaPlayer.IsPlaying);
+                        
+                    }
+                }
+                catch (Exception e)
+                {
+                    ;
+                }
+            })); 
         }
         #endregion
-        public void 增加字幕(string A)
+        private void 增加字幕(string A)
         {
             int 显示的字幕数 = 3;
             int Len = 0;
@@ -217,7 +351,7 @@ namespace PlayW
                 }
             }));
         }
-        public void 增加弹幕(string A)
+        private void 增加弹幕(string A)
         {
             int 显示的弹幕数 = 30;
             int Len = 0;
@@ -264,9 +398,15 @@ namespace PlayW
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            string A = System.IO.Path.Combine(new FileInfo(Assembly.GetEntryAssembly().Location).DirectoryName, "libvlc", /*IntPtr.Size == 4 ?*/ "win-x64" /*: "win-x64"*/);
-            this.VlcControl.SourceProvider.CreatePlayer(new DirectoryInfo(A));
-            
+            //string A = System.IO.Path.Combine(new FileInfo(Assembly.GetEntryAssembly().Location).DirectoryName, "libvlc", /*IntPtr.Size == 4 ?*/ "win-x64" /*: "win-x64"*/);
+            //var options = new string[]
+            //{
+            //    " --avcodec-hw=dxva2",
+            //};
+            //// this.VlcControl.SourceProvider.CreatePlayer(new DirectoryInfo(A), options);
+            ///
+           
+
             this.Dispatcher.Invoke(new Action(delegate
             {
                 提示框.Visibility = Visibility.Visible;
@@ -286,7 +426,7 @@ namespace PlayW
                     DD.Start("直播观看缓冲进行中");
                     DD.DownIofo.备注 = "直播观看缓冲进行中";
                 }
-              
+
                 Thread.Sleep(MMPU.播放缓冲时长 * 1000);
                 this.Dispatcher.Invoke(new Action(delegate
                 {
@@ -294,30 +434,34 @@ namespace PlayW
                 }));
                 try
                 {
+                    if(!窗口是否打开)
+                    {
+                        return;
+                    }
                     this.Dispatcher.Invoke(new Action(delegate
                     {
                         try
                         {
                             Play_SETVolume((int)音量.Value);
-                            //this.VlcControl.SourceProvider.MediaPlayer.Audio.Volume = (int)音量.Value;
                         }
                         catch (Exception)
                         {
                         }
-                    }));
 
-                    // Aplayer.Open(DD.DownIofo.文件保存路径);
-                    // this.VlcControl.SourceProvider.MediaPlayer.Play(new Uri(DD.DownIofo.文件保存路径));
-                    this.VlcControl.SourceProvider.MediaPlayer.EndReached += 播放到达结尾触发事件; ;
-                    Play_Open(DD.DownIofo.文件保存路径);
-                    //Aplayer.OnStateChanged += 播放到达结尾触发事件;  
+
+                        // Aplayer.Open(DD.DownIofo.文件保存路径);
+                        // this.VlcControl.SourceProvider.MediaPlayer.Play(new Uri(DD.DownIofo.文件保存路径));
+                        this.VLCV.MediaPlayer.EndReached += 播放到达结尾触发事件; ;
+                        Play_Open(DD.DownIofo.文件保存路径);
+                        //Aplayer.OnStateChanged += 播放到达结尾触发事件;  
+                    }));
                     播放状态 = true;
                     if (DD.DownIofo.平台 == "bilibili")
                     {
                         //获取弹幕();
                     }
                 }
-                catch (Exception )
+                catch (Exception ex)
                 {
                     ;
                 }
@@ -421,11 +565,11 @@ namespace PlayW
                 }
             })).Start();
         }
-        private void 播放到达结尾触发事件(object sender, Vlc.DotNet.Core.VlcMediaPlayerEndReachedEventArgs e)// AxAPlayer3Lib._IPlayerEvents_OnStateChangedEvent e)
+        private void 播放到达结尾触发事件(object sender, EventArgs e)// AxAPlayer3Lib._IPlayerEvents_OnStateChangedEvent e)
         {
             if (播放状态)
             {
-                刷新播放("直播源推流停止或卡顿，正在尝试重连(或延长设置里“默认缓冲时长”的时间）",false);
+                刷新播放("直播源推流停止或卡顿，正在尝试重连(或延长设置里“默认缓冲时长”的时间）", false);
             }
         }
         /// <summary>
@@ -584,7 +728,7 @@ namespace PlayW
             }
         }
 
-        // private int LastWidth;
+        private int LastWidth;
         private int LastHeight;
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -606,11 +750,11 @@ namespace PlayW
                         {
                             this.Width = this.Height * 1.75;
                         }
-                        else
+                        if (this.Width != LastWidth)
                         {
                             this.Height = this.Width / 1.75;
                         }
-                        //LastWidth = (int)this.Width;
+                        LastWidth = (int)this.Width;
                         LastHeight = (int)this.Height;
                         break;
                     }
@@ -661,26 +805,7 @@ namespace PlayW
             //全屏回车
             else if (e.KeyStates == Keyboard.GetKeyStates(Key.Enter))
             {
-                if (this.WindowState == WindowState.Normal)
-                {
-                    this.WindowState = WindowState.Maximized;
-                }
-                else if (this.WindowState == WindowState.Maximized)
-                {
-                    this.WindowState = WindowState.Normal;
-                }
-                if (字幕.字幕位置 != (int)this.Width / 100 * (int)字幕位置.Value)
-                {
-                    字幕.字幕位置 = (int)this.Width / 100 * (int)字幕位置.Value;
-                    if (字幕.FontSize > 50)
-                    {
-                        字幕.FontSize = 1;
-                    }
-                    else
-                    {
-                        字幕.FontSize++;
-                    }
-                }
+                设置全屏();
             }
             //F5刷新
             else if (e.KeyStates == Keyboard.GetKeyStates(Key.F5))
@@ -694,9 +819,38 @@ namespace PlayW
 
             }
         }
+        public void 设置全屏()
+        {
+            if (this.WindowState == WindowState.Normal)
+            {
+                this.WindowState = WindowState.Maximized;
+            }
+            else if (this.WindowState == WindowState.Maximized)
+            {
+                this.WindowState = WindowState.Normal;
+            }
+            if (字幕.字幕位置 != (int)this.Width / 100 * (int)字幕位置.Value)
+            {
+                字幕.字幕位置 = (int)this.Width / 100 * (int)字幕位置.Value;
+                if (字幕.FontSize > 50)
+                {
+                    字幕.FontSize = 1;
+                }
+                else
+                {
+                    字幕.FontSize++;
+                }
+            }
+        }
         private void VlcControl_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-
+            try
+            {
+                this.DragMove();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void Image_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
@@ -713,11 +867,11 @@ namespace PlayW
                 {
                     try
                     {
-                        if (this.VlcControl.SourceProvider.MediaPlayer != null)
+                        if (this.VLCV.MediaPlayer.IsPlaying)
                         {
-                            this.VlcControl.SourceProvider.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
+                            this.VLCV.MediaPlayer.Stop();//这里要开线程处理，不然会阻塞播放
                         }
-                        this.VlcControl.Dispose();
+                        this.VLCV.Dispose();
                     }
                     catch (Exception)
                     {
@@ -955,6 +1109,13 @@ namespace PlayW
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             关闭窗口();
+        }
+
+        public delegate void 播放窗口自动排序委托(string playbool);
+        public event 播放窗口自动排序委托 播放窗口自动排序事件; 
+        private void 播放窗口自动排列按钮_Click(object sender, RoutedEventArgs e)
+        {
+            播放窗口自动排序事件(窗口信息.GUID);
         }
     }
 }

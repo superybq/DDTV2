@@ -43,16 +43,15 @@ namespace DDTV_New.window
                 try
                 {
                     roomId = int.Parse(唯一码.Text);
-                    if (roomId < 10001)
-                    { 
-                        string roomDD = bilibili.根据房间号获取房间信息.获取真实房间号(roomId.ToString());
-                        if(!string.IsNullOrEmpty(roomDD))
-                        {
-                            roomId = int.Parse(roomDD);
-                        }
+
+                    string roomDD = bilibili.根据房间号获取房间信息.获取真实房间号(roomId.ToString());
+                    if (!string.IsNullOrEmpty(roomDD))
+                    {
+                        roomId = int.Parse(roomDD);
                     }
                 }
-                catch (Exception){
+                catch (Exception)
+                {
 
                     MessageBox.Show("输入的直播间房间号不符合房间号规则(数字)");
                     return;
@@ -74,10 +73,28 @@ namespace DDTV_New.window
                         RB.data.Add(item);
                     }
                 }
-                RB.data.Add(new RoomCadr() { Name = 名称.Text + "-NV", OfficialName = 名称.Text + "-NV", RoomNumber = roomId.ToString() });
+                long UID = 0;
+                if(DataCache.读缓存(DataCache.缓存头.通过房间号获取UID + roomId, 0, out string GETUID))
+                {
+                    try
+                    {
+                        UID = long.Parse(GETUID);
+                    }
+                    catch (Exception){}
+                }
+                if(UID<1)
+                {
+                    try
+                    {
+                        UID = long.Parse(bilibili.根据房间号获取房间信息.通过房间号获取UID(roomId.ToString()));
+                    }
+                    catch (Exception){}
+                }
+               
+                RB.data.Add(new RoomCadr() { Name = 名称.Text , OfficialName = 名称.Text , RoomNumber = roomId.ToString(),UID= UID });
                 string JOO = JsonConvert.SerializeObject(RB);
                 MMPU.储存文本(JOO, RoomConfigFile);
-                提示.Content = 名称.Text + "-NV["+ 唯一码.Text + "]添加完成";
+                提示.Content = 名称.Text + "["+ 唯一码.Text + "]添加完成";
                 bilibili.已连接的直播间状态.Add(new 直播间状态() { 房间号= roomId });
                 
                 bilibili.RoomList.Add(new RoomInfo
@@ -86,11 +103,11 @@ namespace DDTV_New.window
                     标题 = "",
                     是否录制弹幕 = false,
                     是否录制视频 = false,
-                    UID = "",
+                    UID = UID.ToString(),
                     直播开始时间 = "",
-                    名称 = 名称.Text + "-NV",
+                    名称 = 名称.Text ,
                     直播状态 = false,
-                    原名 = 名称.Text + "-NV",
+                    原名 = 名称.Text ,
                     是否提醒 = false,
                     平台 = "bilibili"
                 });
@@ -128,10 +145,17 @@ namespace DDTV_New.window
 
         private void 一键导入账号关注VTB和VUP_Click(object sender, RoutedEventArgs e)
         {
-            增加房间提示信息.Content = $"正在导入，此期间请勿关闭该窗口.速度会根据关注列表的长度有所变化(一个V大约2秒)...请稍后.....";
+            增加房间提示信息.Content = $"正在导入，请勿关闭该窗口，请稍后";
             AddList.导入VTBVUP((TEXT) =>
             {
-                增加房间提示信息.Content = TEXT;
+                try
+                {
+                    增加房间提示信息.Content = "导入完成,新增:"+TEXT.Split('：')[TEXT.Split('：').Length - 1]+"个";
+                }
+                catch (Exception)
+                {
+                    增加房间提示信息.Content = "导入完成";
+                }
                
             },this,false);
         }

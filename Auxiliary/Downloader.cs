@@ -70,8 +70,7 @@ namespace Auxiliary
             public bool 网络超时 { set; get; } = false;
             public double 已下载大小bit { set; get; }
             public string 已下载大小str { set; get; }
-            public string 文件保存路径 { set; get; }
-            
+            public string 文件保存路径 { set; get; }          
             public string 事件GUID { set; get; }
             public string 备注 { set; get; }
             public int 开始时间 { set; get; }
@@ -160,7 +159,6 @@ namespace Auxiliary
             DownIofo.WC.Headers.Add("Accept-Language: zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4");
             DownIofo.WC.DownloadFileCompleted += 下载完成事件;
             DownIofo.WC.DownloadProgressChanged += 下载过程中事件;
-            // rq.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3";
             DownIofo.WC.Headers.Add("Accept-Encoding: gzip, deflate, br");
             DownIofo.WC.Headers.Add("Cache-Control: max-age=0");
             DownIofo.WC.Headers.Add("Sec-Fetch-Mode: navigate");
@@ -221,7 +219,6 @@ namespace Auxiliary
                             {
                                 if (bilibili.根据房间号获取房间信息.是否正在直播(DownIofo.房间_频道号,true))
                                 {
-
                                     a++;
                                     if (判断文件是否存在.判断(DownIofo.下载地址, DownIofo.平台, DownIofo.房间_频道号))
                                     {
@@ -237,7 +234,7 @@ namespace Auxiliary
                                         }
                                         else
                                         {
-                                            DownIofo.备注 = "该房间或未推流/直播完成/已加密";
+                                            DownIofo.备注 = "等待房间推流...";
                                             Thread.Sleep(30000);
                                             //return null;
                                         }
@@ -274,7 +271,7 @@ namespace Auxiliary
             try
             {
                 DownIofo.WC.DownloadFileTaskAsync(new Uri(DownIofo.下载地址), DownIofo.文件保存路径);
-                InfoLog.InfoPrintf(DownIofo.主播名称 + "开始直播，建立下载任务\n==============建立下载任务================\n主播名:" + DownIofo.主播名称 + "\n房间号:" + DownIofo.房间_频道号 + "\n标题:" + DownIofo.标题 + "\n开播时间:" + MMPU.Unix转换为DateTime(DownIofo.开始时间.ToString()) + "\n保存路径:" + DownIofo.文件保存路径 + "\n下载任务类型:" + (DownIofo.继承.是否为继承对象 ? "续下任务" : "新建下载任务") + "\n===============建立下载任务===============\n", InfoLog.InfoClass.下载必要提示);
+                InfoLog.InfoPrintf(DownIofo.主播名称 + "开始直播，建立下载任务\r\n==============建立下载任务================\r\n主播名:" + DownIofo.主播名称 + "\r\n房间号:" + DownIofo.房间_频道号 + "\r\n标题:" + DownIofo.标题 + "\r\n开播时间:" + MMPU.Unix转换为DateTime(DownIofo.开始时间.ToString()) + "\r\n保存路径:" + DownIofo.文件保存路径 + "\r\n下载任务类型:" + (DownIofo.继承.是否为继承对象 ? "续下任务" : "新建下载任务") + "\r\n===============建立下载任务===============\r\n", InfoLog.InfoClass.下载必要提示);
                 
                 if (MMPU.录制弹幕 && !DownIofo.继承.是否为继承对象)
                 {
@@ -349,7 +346,7 @@ namespace Auxiliary
                 {
                     if (item.DownIofo.下载状态 && item.DownIofo.是否保存 && 是否保存)
                     {
-                        InfoLog.InfoPrintf($"新建任务冲突，放弃新建任务，任务内容:\n房间号:{唯一码}\r主播名称:{主播名称}\r标题:{标题}", InfoLog.InfoClass.下载必要提示);
+                        InfoLog.InfoPrintf($"新建任务冲突，放弃新建任务，任务内容:\r\n房间号:{唯一码}\r\n主播名称:{主播名称}\r\n标题:{标题}", InfoLog.InfoClass.下载必要提示);
                         return null;
                     }
                     else
@@ -659,7 +656,7 @@ namespace Auxiliary
                 }
                 catch (Exception ES)
                 {
-                    InfoLog.InfoPrintf($"录制任务意外终止:\n{ES.ToString()}", InfoLog.InfoClass.系统错误信息);
+                    InfoLog.InfoPrintf($"录制任务意外终止:\r\n{ES.ToString()}", InfoLog.InfoClass.系统错误信息);
                     DownIofo.下载状态 = false;
                     DownIofo.备注 = "录制任务意外终止，已新建续命任务";
                     下载结束提醒(true, "录制任务意外终止，已新建续命任务", DownIofo);
@@ -668,17 +665,17 @@ namespace Auxiliary
                     {
                         DownIofo.下载状态 = false;
                         下载对象 = Downloader.新建下载对象(
-                                                               DownIofo.平台,
-                                                               DownIofo.房间_频道号,
-                                                               bilibili.根据房间号获取房间信息.获取标题(DownIofo.房间_频道号),
-                                                               Guid.NewGuid().ToString(),
-                                                               bilibili.根据房间号获取房间信息.下载地址(DownIofo.房间_频道号),
-                                                               "前一个下载出现异常，新建下载",
-                                                               DownIofo.是否保存,
-                                                               DownIofo.主播名称,
-                                                               false,
-                                                               DownIofo.文件保存路径
-                                                               );
+                            DownIofo.平台,
+                            DownIofo.房间_频道号,
+                            bilibili.根据房间号获取房间信息.获取标题(DownIofo.房间_频道号),
+                            Guid.NewGuid().ToString(),
+                            bilibili.根据房间号获取房间信息.下载地址(DownIofo.房间_频道号),
+                            "前一个下载出现异常，新建下载",
+                            DownIofo.是否保存,
+                            DownIofo.主播名称,
+                            false,
+                            DownIofo.文件保存路径
+                            );
                     }
                     catch (Exception)
                     {
@@ -724,16 +721,16 @@ namespace Auxiliary
                 }
             }
             catch (Exception) { }
-            InfoLog.InfoPrintf($"\n=============={提醒标题}================\n" +
+            InfoLog.InfoPrintf($"\r\n=============={提醒标题}================\r\n" +
                                $"主播名:{DOL.主播名称}" +
-                               $"\n房间号:{DOL.房间_频道号}" +
-                               $"\n标题:{DOL.标题}" +
-                               $"\n开播时间:{MMPU.Unix转换为DateTime(DOL.开始时间.ToString())}" +
-                               $"\n结束时间:{MMPU.Unix转换为DateTime(DOL.结束时间.ToString())}" +
-                               $"\n保存路径:{DOL.文件保存路径}" +
-                               $"\n下载任务类型:{(DOL.继承.是否为继承对象 ? "续下任务" : "新建下载任务")}" +
-                               $"\n结束原因:{DOL.备注}" +
-                               $"\n==============={提醒标题}===============\n", InfoLog.InfoClass.下载必要提示);
+                               $"\r\n房间号:{DOL.房间_频道号}" +
+                               $"\r\n标题:{DOL.标题}" +
+                               $"\r\n开播时间:{MMPU.Unix转换为DateTime(DOL.开始时间.ToString())}" +
+                               $"\r\n结束时间:{MMPU.Unix转换为DateTime(DOL.结束时间.ToString())}" +
+                               $"\r\n保存路径:{DOL.文件保存路径}" +
+                               $"\r\n下载任务类型:{(DOL.继承.是否为继承对象 ? "续下任务" : "新建下载任务")}" +
+                               $"\r\n结束原因:{DOL.备注}" +
+                               $"\r\n==============={提醒标题}===============\r\n", InfoLog.InfoClass.下载必要提示);
         }
         public static string 下载完成合并FLV(DownIofoData downIofo, bool 是否直播结束)
         {
