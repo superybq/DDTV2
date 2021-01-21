@@ -413,20 +413,22 @@ namespace Auxiliary
             {
                 try
                 {
-                    int 状态 = (int)JO["data"][item.UID]["live_status"];
-                    
+                    int 状态 = (int)JO["data"][item.UID]?["live_status"];
                     if (状态 == 0)
                     {
+                        item.标题 = "";
                         item.直播状态 = false;
                         item.轮播状态 = false;
                     }
                     else if (状态 == 1)
                     {
                         item.直播状态 = true;
+                        item.标题 = (string)JO["data"][item.UID]?["title"];
                         item.轮播状态 = false;
                     }
                     else if (状态 == 2)
                     {
+                        item.标题 = "";
                         item.直播状态 = false;
                         item.轮播状态 = true;
                     }
